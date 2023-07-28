@@ -1,0 +1,12 @@
+{
+  "name": "notebook",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "docs": "docsify serve docs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
