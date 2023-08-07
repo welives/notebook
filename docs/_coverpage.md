@@ -1,1 +1,2 @@
-[开始使用 Let Go](/README.md)
+[开始阅读 Let Go](/README.md)
+[Github](https://github.com/welives)
