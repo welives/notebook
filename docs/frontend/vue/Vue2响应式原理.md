@@ -18,11 +18,11 @@
 
 Vue2 响应式原理简单来说就是Vue官网上的这图片
 
-![Vue响应式原理](../assets/frontend/vue_reactivity_theory.png)
+![Vue响应式原理](../../assets/frontend/vue_reactivity_theory.png)
 
 通过`Object.defineProperty`遍历对象的每一个属性，把每一个属性变成一个`getter`和`setter`函数，读取属性的时候调用`getter`，给属性赋值的时候就会调用`setter`
 
-![observe](../assets/frontend/vue_observe.svg)
+![observe](../../assets/frontend/vue_observe.svg)
 
 当运行`render`函数的时候，发现用到了响应式数据，这时候就会运行`getter`函数，然后`watcher`（发布订阅）就会记录下来。当响应式数据发生变化的时候，就会调用`setter`函数，`watcher`就会再记录下来这次的变化，然后通知`render`函数，数据发生了变化，然后就会重新运行`render`函数，重新生成虚拟 dom 树
 
@@ -328,4 +328,4 @@ export default {
 
 ## 总体流程图
 
-![总体流程图](../assets/frontend/vue_reactivity_overall_process.png)
+![总体流程图](../../assets/frontend/vue_reactivity_overall_process.png)

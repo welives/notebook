@@ -37,7 +37,7 @@
 
 请仔细阅读上面的代码，然后你认为`div.item`这个盒子的宽高是多少？
 
-![CSS包含块案例_1](../assets/frontend/css_containing_block_1.png)
+![CSS包含块案例_1](../../assets/frontend/css_containing_block_1.png)
 
 
 相信你能够很自信的回答这个简单的问题，`div.item`盒子的`width`为`250px`，`height`为`150px`
@@ -91,7 +91,7 @@
 
 首先阅读上面的代码，然后你能在脑海里面想出其大致的样子么？或者用笔和纸画一下也行
 
-![CSS包含块案例_2](../assets/frontend/css_containing_block_2.png)
+![CSS包含块案例_2](../../assets/frontend/css_containing_block_2.png)
 
 怎么样？有没有和你所想象的对上？
 
@@ -142,7 +142,7 @@
 
 我们对于上面的代码只新增了一条声明，那就是`transform: rotate(0deg)`，此时的渲染效果却发生了改变，如下图所示：
 
-![CSS包含块案例_3](../assets/frontend/css_containing_block_3.png)
+![CSS包含块案例_3](../../assets/frontend/css_containing_block_3.png)
 
 可以看到，此时对于`div.item2`来讲，包含块就变成了`div.item`
 

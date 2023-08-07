@@ -26,7 +26,7 @@ p{
 
 上面的代码也非常简单，就是在`body`中有一个`h1`标题而已，该`h1`标题呈现出来的外观是如下：
 
-![H1标题](../assets/frontend/css_computed_h1.png)
+![H1标题](../../assets/frontend/css_computed_h1.png)
 
 目前我们没有设置该`h1`的任何样式，但是却能看到该`h1`有一定的默认样式，例如有默认的字体大小、默认的颜色
 
@@ -34,7 +34,7 @@ p{
 
 答案是**该元素上面会有 CSS 所有的属性**。你可以打开浏览器的开发者面板，选择「**元素**」，切换到「**计算样式**」，之后勾选「**全部显示**」，此时你就能看到在此`h1`上面所有 CSS 属性对应的值
 
-![CSS计算后的样式](../assets/frontend/css_computed_style.png)
+![CSS计算后的样式](../../assets/frontend/css_computed_style.png)
 
 换句话说，**我们所书写的任何一个 HTML 元素，实际上都有完整的一整套 CSS 样式**。这一点往往是让初学者比较意外的，因为我们平时在书写 CSS 样式时，往往只会书写必要的部分，例如前面的：
 
@@ -70,7 +70,7 @@ p{
 
 当然，除了「**页面作者样式**」，一般浏览器还会存在「**用户代理样式表**」，简单来讲就是浏览器内置了一套样式表
 
-![用户代理样式表](../assets/frontend/user_agent_stylesheet.png)
+![用户代理样式表](../../assets/frontend/user_agent_stylesheet.png)
 
 在上面的示例中，「页面作者样式」中设置了`color`属性，而用户代理样式表（浏览器提供的样式表）中设置了诸如`display`、`margin-block-start`、`margin-block-end`、`margin-inline-start`、`margin-inline-end`等属性对应的值
 
@@ -101,7 +101,7 @@ p{
 
 例如现在有「页面作者样式」和「用户代理样式表」中存在属性的冲突，那么会以「页面作者样式」优先
 
-![CSS层叠](../assets/frontend/css_cascade.png)
+![CSS层叠](../../assets/frontend/css_cascade.png)
 
 可以明显的看到，「页面作者样式」和「用户代理样式表」中同时存在的`display`属性的设置，最终「页面作者样式」干掉了「用户代理样式表」中冲突的属性。这就是第一步，根据不同源的重要性来决定应用哪一个源的样式
 
@@ -122,7 +122,7 @@ h1 {
 
 很明显，上面的选择器的权重要大于下面的选择器，因此最终标题呈现为`50px`
 
-![CSS优先级](../assets/frontend/css_specificity.png)
+![CSS优先级](../../assets/frontend/css_specificity.png)
 
 可以看到，落败的作者样式在`Elements>Styles`中会被划掉
 
@@ -142,7 +142,7 @@ h1 {
 
 在上面的代码中，同样都是**页面作者样式，选择器的权重也相同**，此时位于下面的样式声明会层叠掉上面的那一条样式声明，最终会应用`20px`这一条属性值
 
-![CSS比较次序](../assets/frontend/css_sequence.png)
+![CSS比较次序](../../assets/frontend/css_sequence.png)
 
 至此，样式声明中存在冲突的所有情况，就全部被解决了
 
@@ -167,7 +167,7 @@ No、No、No，别急，此时还有第三个步骤，那就是使用继承而�
 
 在上面的代码中，我们针对`div`设置了`color`属性值为红色，而针对`p`元素我们没有声明任何的属性，但是由于`color`是可以继承的，因此`p`元素从**最近的**`div`身上继承到了`color`属性的值
 
-![CSS继承](../assets/frontend/css_inherit_1.png)
+![CSS继承](../../assets/frontend/css_inherit_1.png)
 
 这里有两个点需要注意一下
 
@@ -189,7 +189,7 @@ No、No、No，别急，此时还有第三个步骤，那就是使用继承而�
 </style>
 ```
 
-![CSS继承_就近原则](../assets/frontend/css_inherit_1.png)
+![CSS继承_就近原则](../../assets/frontend/css_inherit_1.png)
 
 因为这里并不涉及到选中`p`元素声明`color`值，而是从父元素上面继承到`color`对应的值，因此这里是「**就近原则**」，初学者往往会产生混淆，又去比较权重，但是这里根本不会涉及到权重比较，因为压根儿就没有选中到`p`元素
 
@@ -202,7 +202,7 @@ No、No、No，别急，此时还有第三个步骤，那就是使用继承而�
 
 好了，目前走到这一步，如果属性值都还不能确定下来，那么就只能是使用默认值了
 
-![CSS默认值](../assets/frontend/css_default_value.png)
+![CSS默认值](../../assets/frontend/css_default_value.png)
 
 前面我们也说过，一个 HTML 元素要在浏览器中渲染出来，必须具备所有的 CSS 属性值，但是绝大部分我们是不会去设置的，「用户代理样式表」里面也不会去设置，也无法从继承拿到，因此最终都是用默认值
 
@@ -222,6 +222,6 @@ No、No、No，别急，此时还有第三个步骤，那就是使用继承而�
 </style>
 ```
 
-![CSS面试题](../assets/frontend/css_test_question.png)
+![CSS面试题](../../assets/frontend/css_test_question.png)
 
 实际上原因很简单，因为`a`元素在「用户代理样式表」中已经设置了`color`属性对应的值，因此会应用此声明值。而`p`元素无论是在「页面作者样式」还是「用户代理样式表」，都没有对此属性进行声明，然而由于`color`属性是可以继承的，因此最终`p`元素的`color`属性值通过继承来自于父元素
