@@ -16,6 +16,6 @@ JS/TS
 
 React
 
-Dart
+[Dart](dart/)
 
 Flutter
