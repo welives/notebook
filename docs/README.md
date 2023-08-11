@@ -8,7 +8,9 @@
   - [CSS 属性计算过程](css/CSS属性计算过程)
   - [CSS 包含块](css/CSS包含块)
 
-JS/TS
+[JS/TS](javascript/)
+  - [this指向](javascript/this指向)
+  - [继承](javascript/继承)
 
 [Vue](vue/)
   - [Vue2响应式原理](vue/Vue2响应式原理)

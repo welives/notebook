@@ -1,7 +1,7 @@
 - [首页](README.md)
 - [浏览器](browser/)
 - [CSS](css/)
-- JS/TS
+- [JS/TS](javascript/)
 - [Vue](vue/)
 - React
 - [Dart](dart/)

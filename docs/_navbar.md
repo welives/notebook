@@ -1,6 +1,6 @@
 - 前端
   - [浏览器](browser/)
-  - JS/TS
+  - [JS/TS](javascript/)
   - [CSS](css/)
   - [Vue](vue/)
   - React
