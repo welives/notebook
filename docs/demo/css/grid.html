@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grid布局</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        user-select: none;
+      }
+      html,
+      body,
+      .container {
+        width: 100vw;
+        height: 100vh;
+      }
+      .wrap {
+        width: 100%;
+        height: auto;
+        background-color: #abf3;
+        margin-bottom: 40px;
+      }
+      .wrap h1 {
+        padding: 16px 0;
+        font-size: 24px;
+        text-align: center;
+      }
+      .wrap p {
+        margin: 5px 0;
+        font-size: 14px;
+        text-align: center;
+      }
+      .box {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #abf9;
+        margin: 5px;
+      }
+      /* 基础网格 */
+      .grid-basic {
+        width: 100%;
+        height: auto;
+        display: grid;
+        /*
+          设置列数和宽度
+          使用 repeat 函数确定重复
+          第一个参数为重复次数，第二个参数为重复的值或者重复的模式
+          自动填充,每列宽度33%
+        */
+        grid-template-columns: repeat(auto-fill, 33%);
+        /*
+          设置行数和高度
+        */
+        grid-template-rows: repeat(4, 50px);
+      }
+      /* fr比例 */
+      .grid-fr {
+        display: grid;
+        /* 分三列,第一列宽200, 剩余空间再分为两部分,分别是1/3 和 2/3 */
+        grid-template-columns: 200px 1fr 2fr;
+        grid-template-rows: repeat(4, 50px);
+      }
+      /* minmax 函数*/
+      .minmax {
+        display: grid;
+        grid-template-columns: 1fr 2fr 3fr minmax(200px, 2fr);
+        grid-template-rows: repeat(3, 50px);
+      }
+      /* auto 关键字 */
+      .auto {
+        display: grid;
+        /* 如果存在其他关键字, 如fr, 则auto显示最小宽度或最小高度 */
+        grid-template-columns: 200px auto 300px;
+        grid-template-rows: 1fr 100px auto;
+      }
+      .auto .box {
+        min-height: 50px;
+      }
+      /* areas 属性 */
+      .areas {
+        display: grid;
+        grid-template-columns: 200px 2fr 1fr;
+        grid-template-rows: repeat(3, 50px);
+        /*
+          划分区域并设置别名,通常配合 grid-area 一起使用
+          每一对括号表示一行, 每行用空格分开
+          括号中定义的区域数量要和设置的列数匹配,每个区域使用空格分开
+         */
+        grid-template-areas: 'left header header' 'left content right' 'bottom bottom bottom';
+      }
+      .left {
+        grid-area: left;
+      }
+      .right {
+        grid-area: right;
+      }
+      .header {
+        grid-area: header;
+      }
+      .content {
+        grid-area: content;
+      }
+      .bottom {
+        grid-area: bottom;
+      }
+      /* 自动填充 */
+      .auto-flow {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 200px);
+        grid-template-rows: repeat(2, 50px);
+        grid-auto-flow: row dense;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="wrap">
+        <h1>网格布局基础</h1>
+        <div class="grid-basic">
+          <div class="box">项目1</div>
+          <div class="box">项目2</div>
+          <div class="box">项目3</div>
+          <div class="box">项目4</div>
+          <div class="box">项目5</div>
+          <div class="box">项目6</div>
+          <div class="box">项目7</div>
+          <div class="box">项目8</div>
+          <div class="box">项目9</div>
+          <div class="box">项目10</div>
+        </div>
+      </div>
+
+      <div class="wrap">
+        <h1>fr片段</h1>
+        <p>
+          使用fr关键字，剩余部分将按照比例瓜分，同时即使有固定宽度的项目，也会改变大小使得一行竟可能的占满
+        </p>
+        <div class="grid-fr">
+          <div class="box">项目1</div>
+          <div class="box">项目2</div>
+          <div class="box">项目3</div>
+          <div class="box">项目4</div>
+          <div class="box">项目5</div>
+          <div class="box">项目6</div>
+          <div class="box">项目7</div>
+          <div class="box">项目8</div>
+          <div class="box">项目9</div>
+          <div class="box">项目10</div>
+        </div>
+      </div>
+
+      <div class="wrap">
+        <h1>minmax限定长度</h1>
+        <p>所有的比例宽度都是先去除固定的宽度之后再计算的</p>
+        <div class="minmax">
+          <div class="box">项目1</div>
+          <div class="box">项目2</div>
+          <div class="box">项目3</div>
+          <div class="box">项目4</div>
+          <div class="box">项目5</div>
+          <div class="box">项目6</div>
+          <div class="box">项目7</div>
+          <div class="box">项目8</div>
+          <div class="box">项目9</div>
+          <div class="box">项目10</div>
+        </div>
+      </div>
+
+      <div class="wrap">
+        <h1>auto 关键字</h1>
+        <div class="auto">
+          <div class="box">项目1</div>
+          <div class="box">项目2</div>
+          <div class="box">项目3</div>
+          <div class="box">项目4</div>
+          <div class="box">项目5</div>
+          <div class="box">项目6</div>
+          <div class="box">项目7</div>
+          <div class="box">项目8</div>
+          <div class="box">项目9</div>
+          <div class="box">项目10</div>
+        </div>
+      </div>
+
+      <div class="wrap">
+        <h1>areas 属性</h1>
+        <div class="areas">
+          <div class="box left">项目1</div>
+          <div class="box header">项目2</div>
+          <div class="box content">项目3</div>
+          <div class="box right">项目4</div>
+          <div class="box bottom">项目5</div>
+        </div>
+      </div>
+
+      <div class="wrap">
+        <h1>自动填充</h1>
+        <div class="auto-flow">
+          <div class="box">项目1</div>
+          <div class="box">项目2</div>
+          <div class="box">项目3</div>
+          <div class="box">项目4</div>
+          <div class="box">项目5</div>
+          <div class="box">项目6</div>
+          <div class="box">项目7</div>
+          <div class="box">项目8</div>
+          <div class="box">项目9</div>
+          <div class="box">项目10</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
