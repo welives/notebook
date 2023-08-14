@@ -1,4 +1,5 @@
 - [返回](README.md)  
 - [Vue](vue/)
+  - [Vue2生命周期](vue/Vue2生命周期)
   - [Vue2响应式原理](vue/Vue2响应式原理)
   - [Vue常见优化手段](vue/Vue常见优化手段)
