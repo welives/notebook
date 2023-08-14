@@ -40,7 +40,7 @@ export function callHook(
 
 ---
 
-### `beforeCreate`和`created`
+## `beforeCreate`和`created`
 
 `beforeCreate`和`created`函数都是在实例化`Vue`的阶段，在`_init`方法中执行的, 也就是初始化实例的时候
 
@@ -63,7 +63,7 @@ Vue.prototype._init = function (options?: Record<string, any>) {
 
 ---
 
-### `beforeMount`和`mounted`
+## `beforeMount`和`mounted`
 
 顾名思义，`beforeMount`钩子函数发生在`mount`，也就是 DOM 挂载之前，它的调用时机是在`mountComponent`函数中
 
@@ -197,7 +197,7 @@ const componentVNodeHooks = {
 
 ---
 
-### `beforeUpdate`和`updated`
+## `beforeUpdate`和`updated`
 
 顾名思义，`beforeUpdate`和`updated`的钩子函数执行时机都应该是在数据更新的时候，到目前为止，我们还没有分析`Vue`的数据双向绑定、更新相关，下一章我会详细介绍这个过程
 
@@ -331,7 +331,7 @@ export function recordEffectScope(
 
 ---
 
-### `beforeDestroy`和`destroyed`
+## `beforeDestroy`和`destroyed`
 
 顾名思义，`beforeDestroy`和`destroyed`钩子函数的执行时机在组件销毁的阶段，组件的销毁过程之后会详细介绍，最终会调用`$destroy`方法，它的定义在`src/core/instance/lifecycle.ts`文件中：
 
@@ -381,6 +381,6 @@ Vue.prototype.$destroy = function () {
 
 ---
 
-### 总结
+## 总结
 
 本章主要介绍了`Vue`生命周期中各个钩子函数的执行时机以及顺序，通过分析，我们知道了如在`created`钩子函数中可以访问到数据，在`mounted`钩子函数中可以访问到 DOM，在`destroyed`钩子函数中可以做一些定时器销毁工作，了解它们有利于我们在合适的生命周期去做不同的事情
