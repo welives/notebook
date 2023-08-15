@@ -8,4 +8,6 @@
 
 [Vue2响应式原理](vue/Vue2响应式原理)
 
+[nextTick](vue/nextTick)
+
 [Vue常见优化手段](vue/Vue常见优化手段)
