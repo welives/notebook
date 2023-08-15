@@ -12,4 +12,6 @@
 
 [计算属性和监听](vue/计算属性和监听)
 
+[$set和$delete](vue/$set和$delete)
+
 [Vue常见优化手段](vue/Vue常见优化手段)
