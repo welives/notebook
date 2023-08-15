@@ -10,4 +10,6 @@
 
 [nextTick](vue/nextTick)
 
+[计算属性和监听](vue/计算属性和监听)
+
 [Vue常见优化手段](vue/Vue常见优化手段)
