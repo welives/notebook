@@ -1,3 +1,5 @@
+> 本笔记所使用的Vue2源码版本为`2.7.14`
+
 [Vue2生命周期](vue/Vue2生命周期)
 
 [new Vue发生了什么](vue/newVue)
@@ -14,4 +16,8 @@
 
 [$set和$delete](vue/$set和$delete)
 
+[props](vue/props)
+
 [Vue常见优化手段](vue/Vue常见优化手段)
+
+[杂项](vue/杂项)
