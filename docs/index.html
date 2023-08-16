@@ -17,6 +17,10 @@
       href="https://cdn.bootcdn.net/ajax/libs/prism/1.29.0/themes/prism.min.css"
       rel="stylesheet"
     />
+    <link
+      href="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/sidebar-folder.min.css"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="app">加载中...</div>
@@ -30,6 +34,9 @@
         coverpage: true,
         // 侧边栏支持，默认加载的是项目根目录下的_sidebar.md文件
         loadSidebar: true,
+        alias: {
+          '/.*/_sidebar.md': '/_sidebar.md',
+        },
         // 自定义侧边栏后默认不会再生成目录，设置生成目录的最大层级（建议配置为2-4）
         subMaxLevel: 3,
         // 导航栏支持
@@ -48,6 +55,7 @@
     </script>
     <!-- Docsify v4 -->
     <script src="https://cdn.bootcdn.net/ajax/libs/docsify/4.13.0/docsify.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/docsify-sidebar-collapse.min.js"></script>
     <!-- 外链脚本支持 -->
     <script src="https://cdn.bootcdn.net/ajax/libs/docsify/4.13.0/plugins/external-script.min.js"></script>
     <!-- emoji表情支持 -->

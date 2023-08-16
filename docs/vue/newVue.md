@@ -249,7 +249,7 @@ Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
 }
 ```
 
-往后参考`Diff算法`篇章，主要讲解
+往后参考[Diff算法](vue/Diff算法)篇章
 
 ---
 
