@@ -16,9 +16,7 @@ function Vue(options) {
 ```ts
 Vue.prototype._init = function (options?: Record<string, any>) {
   const vm: Component = this
-
   // 省略一系列其它初始化的代码
-
   if (vm.$options.el) {
     vm.$mount(vm.$options.el)
   }
@@ -40,9 +38,7 @@ Vue.prototype.$mount = function (
   hydrating?: boolean
 ): Component {
   el = el && query(el)
-
   // 省略一系列初始化以及逻辑判断代码
-
   return mount.call(this, el, hydrating)
 }
 ```
@@ -69,9 +65,7 @@ export function mountComponent(
 ): Component {
   vm.$el = el
   // 省略一系列其它代码
-
   let updateComponent
-  /* istanbul ignore if */
   if (__DEV__ && config.performance && mark) {
     updateComponent = () => {
       // ...

@@ -11,12 +11,635 @@
 1. 使用属性描述符`Object.defineProperty`监听属性的赋值
 2. 赋值完成后调用依赖该属性的函数，那如何获取依赖的函数呢？看第三点
 3. 由于依赖会调用属性的`get`方法，所以可以在`get`方法中「**依赖收集**」
-4. 然后在set方法中执行这些依赖的函数，称为「**派发更新**」
+4. 然后在`set`方法中执行这些依赖的函数，称为「**派发更新**」
 
+---
 
-## 原理
+## 深入了解
 
-Vue2 响应式原理简单来说就是Vue官网上的这图片
+### 初始化
+
+先来看看源码中是怎么初始化`data`的，它的定义在`src/core/instance/state.ts`文件中：
+
+```ts
+export function initState(vm: Component) {
+  const opts = vm.$options
+  // ...
+  if (opts.data) {
+    initData(vm)
+  } else {
+    const ob = observe((vm._data = {}))
+    ob && ob.vmCount++
+  }
+  // ...
+}
+
+function initData(vm: Component) {
+  let data: any = vm.$options.data
+  data = vm._data = isFunction(data) ? getData(data, vm) : data || {}
+  // ...
+  const keys = Object.keys(data)
+  const props = vm.$options.props
+  const methods = vm.$options.methods
+  let i = keys.length
+  while (i--) {
+    const key = keys[i]
+    // ...
+    proxy(vm, `_data`, key)
+  }
+  const ob = observe(data) // 响应式处理
+  ob && ob.vmCount++
+}
+```
+
+`data`的初始化主要过程是做两件事：
+
+- 一个是对`data`函数返回的对象进行遍历，通过`proxy`函数把每一个`vm._data.xxx`都代理到`vm.xxx`上
+- 另一个是调用`observe`方法观察整个`data`的变化，把`data`也变成响应式，使得可以通过`vm._data.xxx`访问到定义在`data`函数所返回对象中对应的属性
+
+### `observe`
+
+`observe`函数的功能就是用来监测数据的变化，它的定义在`src/core/observer/index.ts`文件中：
+
+```ts
+export function observe(
+  value: any,
+  shallow?: boolean,
+  ssrMockReactivity?: boolean
+): Observer | void {
+  if (value && hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
+    return value.__ob__
+  }
+  if (
+    shouldObserve &&
+    (ssrMockReactivity || !isServerRendering()) &&
+    (isArray(value) || isPlainObject(value)) &&
+    Object.isExtensible(value) &&
+    !value.__v_skip /* ReactiveFlags.SKIP */ &&
+    !isRef(value) &&
+    !(value instanceof VNode)
+  ) {
+    return new Observer(value, shallow, ssrMockReactivity)
+  }
+}
+```
+
+可以看到，`observe`函数的最后就是给非`VNode`的对象类型数据添加一个`Observer`，可以把`observe`函数简单理解为`Observer`类的工厂方法，所以还是要看下`Observer`这个类的定义：
+
+```ts
+export class Observer {
+  dep: Dep
+  vmCount: number // number of vms that have this object as root $data
+
+  constructor(public value: any, public shallow = false, public mock = false) {
+    // this.value = value
+    this.dep = mock ? mockDep : new Dep()
+    this.vmCount = 0
+    def(value, '__ob__', this)
+    if (isArray(value)) {
+      if (!mock) {
+        if (hasProto) {
+          ;(value as any).__proto__ = arrayMethods
+        } else {
+          for (let i = 0, l = arrayKeys.length; i < l; i++) {
+            const key = arrayKeys[i]
+            def(value, key, arrayMethods[key])
+          }
+        }
+      }
+      if (!shallow) {
+        this.observeArray(value)
+      }
+    } else {
+      // 遍历value
+      const keys = Object.keys(value)
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i]
+        defineReactive(value, key, NO_INITIAL_VALUE, undefined, shallow, mock)
+      }
+    }
+  }
+  // ...
+}
+```
+
+`Observer`类的主要作用是给对象的属性添加`getter`和`setter`，用于**依赖收集**和**派发更新**。它的构造函数逻辑很简单，首先实例化`Dep`对象，这块稍后会介绍，接着通过执行`def`函数把自身实例添加到数据对象`value`的`__ob__`属性上，`def`函数是一个非常简单的`Object.defineProperty`的封装
+
+```ts
+export function def(obj: Object, key: string, val: any, enumerable?: boolean) {
+  Object.defineProperty(obj, key, {
+    value: val,
+    enumerable: !!enumerable,
+    writable: true,
+    configurable: true
+  })
+}
+```
+
+> 这就是我们平时开发中打印`data`中的对象类型数据时，会发现该对象多了一个`__ob__`属性的原因
+
+### `defineReactive`
+
+`defineReactive`的功能就是定义一个响应式对象，给对象动态添加`getter`和`setter`，它的定义在`src/core/observer/index.ts`文件中：
+
+```ts
+export function defineReactive(
+  obj: object,
+  key: string,
+  val?: any,
+  customSetter?: Function | null,
+  shallow?: boolean,
+  mock?: boolean
+) {
+  const dep = new Dep() // 依赖管理器
+  // ...
+  if (
+    (!getter || setter) &&
+    (val === NO_INITIAL_VALUE || arguments.length === 2)
+  ) {
+    val = obj[key]  // 计算出对应key的值
+  }
+
+  let childOb = !shallow && observe(val, false, mock) // 递归的转化对象的嵌套属性
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter() {
+      // 依赖收集
+    },
+    set: function reactiveSetter(newVal) {
+      // 派发更新
+    }
+  })
+
+  return dep
+}
+```
+
+`defineReactive`函数最开始初始化`Dep`对象的实例，接着拿到`obj`的属性描述符，然后对子对象递归调用`observe`方法，这样就保证了无论`obj`的结构多复杂，它的所有子属性也能变成响应式的对象，这样我们访问或修改`obj`中一个嵌套较深的属性，也能触发`getter`和`setter`。最后利用`Object.defineProperty`去给`obj`的属性`key`添加`getter`和`setter`
+
+---
+
+## 依赖收集
+
+什么是依赖了？我们先回顾一下`mountComponent`的定义：
+
+```ts
+export function mountComponent(
+  vm: Component,
+  el: Element | null | undefined,
+  hydrating?: boolean
+): Component {
+  // ...
+  let updateComponent
+  if (__DEV__ && config.performance && mark) {
+    updateComponent = () => {
+      // ...
+      vm._update(vnode, hydrating)
+    }
+  } else {
+    updateComponent = () => {
+      vm._update(vm._render(), hydrating)
+    }
+  }
+  // ...
+  // render-watcher
+  new Watcher(
+    vm,
+    updateComponent,
+    noop,
+    watcherOptions,
+    true /* isRenderWatcher */
+  )
+  // ...
+}
+```
+
+### `Watcher`
+
+首先说明下这个`Watcher`类，它会根据传入的参数不同，可以分别实例化出三种不同的`Watcher`实例，它们分别是`user-watcher`、`computed-watcher`以及`render-watcher`
+
+- `user-watcher`：就是开发者自己定义的监听器
+- `computed-watcher`：也就是计算属性
+- `render-watcher`：只是用做视图渲染而定义的`Watcher`实例，也就是上面的`mountComponent`函数最后所实例化的`Watcher`类
+
+`user-watcher`和`computed-watcher`请查看[计算属性和监听](vue/计算属性和监听)，本章着重讲解`render-watcher`的情况，它的定义在`src/core/observer/watcher.ts`文件中：
+
+```ts
+export default class Watcher implements DepTarget {
+  // ...
+  constructor(
+    vm: Component | null,
+    expOrFn: string | (() => any),
+    cb: Function,
+    options?: WatcherOptions | null,
+    isRenderWatcher?: boolean
+  ) {
+    // ...
+    // 是否是render-watcher
+    if ((this.vm = vm) && isRenderWatcher) {
+      vm._watcher = this  // 当前组件下挂载vm._watcher属性
+    }
+    // ...
+    this.before = options.before  // render-watcher特有属性
+    this.getter = expOrFn         // 第二个参数
+    // ...
+    this.value = this.lazy ? undefined : this.get() // 实例化为user-watcher和render-watcher时就会执行this.get()方法
+  }
+  get() {
+    pushTarget(this)  // 添加
+    let value
+    const vm = this.vm
+    try {
+      value = this.getter.call(vm, vm)  // 执行vm._update(vm._render())
+    } catch (e: any) {
+      // ...
+    } finally {
+      // ...
+      popTarget() // 移除
+      this.cleanupDeps()
+    }
+    return value
+  }
+  addDep(dep: Dep) {
+    const id = dep.id
+    if (!this.newDepIds.has(id)) {
+      this.newDepIds.add(id)
+      this.newDeps.push(dep)
+      if (!this.depIds.has(id)) {
+        dep.addSub(this)  // 将当前watcher收集到dep实例中
+      }
+    }
+  }
+}
+```
+
+当执行`new Watcher`的时候内部会挂载一些属性，然后执行`this.get()`这个方法，首先会执行一个全局的方法`pushTarget(this)`，传入当前`watcher`的实例。
+
+我们来看一下`pushTarget`这个函数，它的定义在`src/core/observer/dep.ts`文件中：
+
+```ts
+export default class Dep {
+  static target?: DepTarget | null
+  // ...
+}
+Dep.target = null
+const targetStack: Array<DepTarget | null | undefined> = []   // 组件从父到子对应的watcher实例集合
+
+export function pushTarget(target?: DepTarget | null) {
+  targetStack.push(target)  // 添加到集合内
+  Dep.target = target       // 当前的watcher实例
+}
+
+export function popTarget() {
+  targetStack.pop()   // 移除数组最后一项
+  Dep.target = targetStack[targetStack.length - 1]    // 赋值为数组最后一项
+}
+```
+
+首先会定义一个`Dep`类的静态属性`Dep.target`为`null`，这是一个全局会用到的属性，保存的是当前组件对应`render-watcher`的实例；`targetStack`内存储的是在执行组件化的过程中每个组件对应的`render-watcher`实例集合，使用的是一个**先进后出**的形式来管理数组的数据，这里可能有点不太好懂，稍后看到流程图自然就明白了；然后将传入的`watcher`实例赋值给全局属性`Dep.target`，再之后的依赖收集过程中就是收集的它
+
+在`watcher`的`get`方法中会执行`getter`这个方法，它是`new Watcher`时传入的第二个参数，这个参数就是之前的`updateComponent`变量，也就是会执行当前组件实例上的`vm._update(vm._render(), hydrating)`将`render`函数转为`VNode`，这个时候如果`render`函数内有使用到`data`中已经转为了响应式的数据，就会触发`get`方法进行依赖的收集，补全之前`defineReactive`依赖收集的逻辑：
+
+```ts
+export function defineReactive(
+  obj: object,
+  key: string,
+  val?: any,
+  customSetter?: Function | null,
+  shallow?: boolean,
+  mock?: boolean
+) {
+  // ..
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter() {
+      const value = getter ? getter.call(obj) : val
+      // 之前pushTarget时赋值的当前watcher实例
+      if (Dep.target) {
+        if (__DEV__) {
+          dep.depend({
+            target: obj,
+            type: TrackOpTypes.GET,
+            key
+          })
+        } else {
+          dep.depend()  // 收集起来，放入到上面的dep依赖管理器内
+        }
+        if (childOb) {
+          childOb.dep.depend()
+          if (isArray(value)) {
+            dependArray(value)
+          }
+        }
+      }
+      return isRef(value) && !shallow ? value.value : value
+    },
+    set: function reactiveSetter(newVal) {
+      // 派发更新
+    }
+  })
+
+  return dep
+}
+```
+
+这个时候我们知道`watcher`是个什么东西了，简单理解就是数据和组件之间一个通信工具的封装，当某个数据被组件读取时，就将依赖数据的组件使用Dep这个类给收集起来
+
+### `Dep`
+
+如果响应式变量被其他组件使用到，也会将使用它的组件收集起来，例如作为了`props`传递给了子组件，在`dep`的数组内就会存在多个`render-watcher`。我们来看下`Dep`类这个依赖管理器的定义：
+
+```ts
+let uid = 0
+export default class Dep {
+  static target?: DepTarget | null
+  id: number
+  subs: Array<DepTarget | null>
+  _pending = false
+
+  constructor() {
+    this.id = uid++
+    this.subs = []  // 对象某个key的依赖集合
+  }
+  // 添加watcher实例到数组内
+  addSub(sub: DepTarget) {
+    this.subs.push(sub)
+  }
+  depend(info?: DebuggerEventExtraInfo) {
+    // 已经被赋值为了watcher的实例
+    if (Dep.target) {
+      Dep.target.addDep(this) // 执行watcher的addDep方法
+      if (__DEV__ && info && Dep.target.onTrack) {
+        Dep.target.onTrack({
+          effect: Dep.target,
+          ...info
+        })
+      }
+    }
+  }
+  // ...
+}
+
+// ------------------------------
+
+export default class Watcher implements DepTarget {
+  // ...
+  // 将当前watcher实例添加到dep内
+  addDep(dep: Dep) {
+    const id = dep.id
+    if (!this.newDepIds.has(id)) {
+      this.newDepIds.add(id)
+      this.newDeps.push(dep)
+      if (!this.depIds.has(id)) {
+        dep.addSub(this)   // 执行dep的addSub方法
+      }
+    }
+  }
+}
+```
+
+这个`Dep`类的作用就是管理属性对应的`watcher`，如添加/删除/通知。至此，依赖收集的过程算是完成了，还是以一张图片加深对过程的理解：
+
+![data依赖收集](./assets/data依赖收集.png)
+
+---
+
+## 派发更新
+
+如果只是收集依赖，那其实是没任何意义的，将收集到的依赖在数据发生变化时通知到并引起视图变化，这样才有意义。当我们对响应式数据重新赋值时，就会触发`set`方法进行派发更新，我们再补全那里的逻辑：
+
+```ts
+export function defineReactive(
+  obj: object,
+  key: string,
+  val?: any,
+  customSetter?: Function | null,
+  shallow?: boolean,
+  mock?: boolean
+) {
+  // ..
+  Object.defineProperty(obj, key, {
+    enumerable: true,
+    configurable: true,
+    get: function reactiveGetter() {
+      // 依赖收集
+    },
+    set: function reactiveSetter(newVal) {
+      const value = getter ? getter.call(obj) : val
+      if (!hasChanged(value, newVal)) {
+        return
+      }
+      if (__DEV__ && customSetter) {
+        customSetter()
+      }
+      if (setter) {
+        setter.call(obj, newVal)
+      } else if (getter) {
+        return
+      } else if (!shallow && isRef(value) && !isRef(newVal)) {
+        value.value = newVal
+        return
+      } else {
+        val = newVal  // 赋值
+      }
+      childOb = !shallow && observe(newVal, false, mock)  // 如果新值是对象也递归包装
+      if (__DEV__) {
+        dep.notify({
+          type: TriggerOpTypes.SET,
+          target: obj,
+          key,
+          newValue: newVal,
+          oldValue: value
+        })
+      } else {
+        dep.notify()  // 通知更新
+      }
+    }
+  })
+
+  return dep
+}
+```
+
+当赋值触发`set`时，首先会检测新值和旧值是否相同；然后将新值赋值给旧值；如果新值是对象则将它变成响应式的；最后让对应属性的依赖管理器使用`dep.notify`发出更新视图的通知。我们看下它的实现：
+
+```ts
+export default class Dep {
+  // ...
+  notify(info?: DebuggerEventExtraInfo) {
+    const subs = this.subs.filter(s => s) as DepTarget[]
+    if (__DEV__ && !config.async) {
+      subs.sort((a, b) => a.id - b.id)
+    }
+    for (let i = 0, l = subs.length; i < l; i++) {
+      const sub = subs[i]
+      if (__DEV__ && info) {
+        sub.onTrigger &&
+          sub.onTrigger({
+            effect: subs[i],
+            ...info
+          })
+      }
+      sub.update()  // 挨个触发watcher的update方法
+    }
+  }
+}
+```
+
+这里做的事情只有一件，将收集起来的`watcher`挨个遍历触发`update`方法：
+
+```ts
+export default class Watcher implements DepTarget {
+  // ...
+  update() {
+    if (this.lazy) {
+      this.dirty = true
+    } else if (this.sync) {
+      this.run()
+    } else {
+      queueWatcher(this)
+    }
+  }
+}
+
+// -------------------------------------
+
+const queue: Array<Watcher> = []
+let has: { [key: number]: true | undefined | null } = {}
+export function queueWatcher(watcher: Watcher) {
+  const id = watcher.id
+  // 如果某个watcher没有被推入队列
+  if (has[id] != null) {
+    return
+  }
+
+  if (watcher === Dep.target && watcher.noRecurse) {
+    return
+  }
+
+  has[id] = true  // 已经推入
+  if (!flushing) {
+    queue.push(watcher) // 推入到队列
+  } else {
+    let i = queue.length - 1
+    while (i > index && queue[i].id > watcher.id) {
+      i--
+    }
+    queue.splice(i + 1, 0, watcher)
+  }
+  if (!waiting) {
+    waiting = true
+
+    if (__DEV__ && !config.async) {
+      flushSchedulerQueue()
+      return
+    }
+    nextTick(flushSchedulerQueue) // 下一个tick更新
+  }
+}
+```
+
+执行`update`方法时将当前`watcher`实例传入到定义的`queueWatcher`方法内，这个方法的作用是把将要执行更新的`watcher`收集到一个队列`queue`之内，保证如果同一个`watcher`内触发了多次更新，只会更新一次对应的`watcher`，我们举一个小示例：
+
+```js
+export default {
+  data() {
+    return {  // 都被模板引用了
+      num: 0,
+      name: 'cc',
+      sex: 'man'
+    }
+  },
+  methods: {
+    changeNum() {  // 赋值100次
+      for(let i = 0; i < 100; i++) {
+        this.num++
+      }
+    },
+    changeInfo() {  // 一次赋值多个属性的值
+      this.name = 'ww'
+      this.sex = 'woman'
+    }
+  }
+}
+```
+
+这里的三个响应式属性它们收集都是同一个`render-watcher`。所以当赋值100次的情况出现时，再将当前的`render-watcher`推入到的队列之后，之后赋值触发的`set`队列内并不会添加任何`render-watcher`；当同时赋值多个属性时也是，因为它们收集的都是同一个`render-watcher`，所以推入到队列一次之后就不会添加了
+
+> 知识点：`Vue`还是挺聪明的，通过这个示例能看出来，派发更新通知的粒度是组件级别，至于组件内是哪个属性赋值了，派发更新并不关心，而且怎么高效更新这个视图，那是之后`diff`比对做的事情。
+
+队列有了，执行`nextTick(flushSchedulerQueue)`在下一次`tick`时更新它，这里的`nextTick`就是我们经常使用的`this.$nextTick`方法的原始方法，它们作用一致，实现原理请看[nextTick](vue/nextTick)。我们来看下参数`flushSchedulerQueue`是个啥？
+
+```ts
+function flushSchedulerQueue() {
+  currentFlushTimestamp = getNow()
+  flushing = true
+  let watcher, id
+
+  queue.sort(sortCompareFn) // watcher 排序
+
+  // 遍历队列
+  for (index = 0; index < queue.length; index++) {
+    watcher = queue[index]
+    // render-watcher独有属性
+    if (watcher.before) {
+      watcher.before()  // 触发 beforeUpdate 钩子
+    }
+    id = watcher.id
+    has[id] = null
+    watcher.run() // 真正的更新方法
+    // ...
+  }
+  // ...
+}
+```
+
+原来是个函数，在`nextTick`方法的内部会执行第一个参数。首先会将`queue`这个队列进行一次排序，依据是每次`new Watcher`生成的`id`，以从小到大的顺序。
+
+> 知识点：`watcher`的执行顺序是**先父后子**，然后是从`computed-watcher`到`user-watcher`最后`render-watcher`，这从它们的初始化顺序就能看出
+
+然后就是遍历这个队列，因为是`render-watcher`，所以是有`before`属性的，执行传入的`before`方法触发`beforeUpdate`钩子。最后执行`watcher.run()`方法，执行真正的派发更新方法。我们去看下`run`干了啥：
+
+```ts
+export default class Watcher implements DepTarget {
+  // ...
+  run() {
+    if (this.active) {
+      const value = this.get() // 其实就是重新执行一次get方法
+      if (
+        value !== this.value ||
+        isObject(value) ||
+        this.deep
+      ) {
+        const oldValue = this.value
+        this.value = value
+        if (this.user) {
+          const info = `callback for watcher "${this.expression}"`
+          invokeWithErrorHandling(
+            this.cb,
+            this.vm,
+            [value, oldValue],
+            this.vm,
+            info
+          )
+        } else {
+          this.cb.call(this.vm, value, oldValue)
+        }
+      }
+    }
+  }
+}
+```
+
+执行`run`其实就是重新执行一次`this.get()`方法，让`vm._update(vm._render())`再走一遍而已。然后生成新旧`VNode`，最后进行`diff`比对以更新视图。
+
+最后我们来说下`Vue`基于`Object.defineProperty`响应式系统的一些不足。比如只能监听到数据的变化，所以有时`data`中要定义一堆的初始值，因为要先加入响应式系统后才能被感知到；还有就是常规 JavaScript 操作对象的方式，并不能监听到增加以及删除。`Vue`为了解决这个问题，提供了两个 API：[$set和$delete](vue/$set和$delete)
+
+---
+
+## 原理图
 
 ![Vue响应式原理](./assets/Vue响应式原理.png)
 
@@ -24,308 +647,4 @@ Vue2 响应式原理简单来说就是Vue官网上的这图片
 
 ![observe](./assets/vue_observe.svg)
 
-当运行`render`函数的时候，发现用到了响应式数据，这时候就会运行`getter`函数，然后`watcher`（发布订阅）就会记录下来。当响应式数据发生变化的时候，就会调用`setter`函数，`watcher`就会再记录下来这次的变化，然后通知`render`函数，数据发生了变化，然后就会重新运行`render`函数，重新生成虚拟 dom 树
-
-
-## 深入了解
-
-我们要明白，响应式的最终目标：**当对象本身或对象属性发生变化时，会运行一些函数，最常见的就是`render`函数。不是只有`render`，只要数据发生了变化后运行了一些函数，就是响应式。比如`watch`**
-
-在具体实现上，Vue 采用了几个核心部件：
-
-- Observer
-- Dep
-- Watcher
-- Scheduler
-
-
-## Observer
-
-`observer`要实现的目标非常简单，就是把一个普通的对象转换成响应式的对象
-
-为了实现这一点，`observer`把对象的每个属性通过`Object.defineProperty`转换为带有`getter`和`setter`的属性，这样一来，当访问或者设置属性时，Vue 就会有机会做一些别的事情
-
-**在组件的生命周期中，这件事发生在`beforeCreate`之后`created`之前**
-
-具体实现上，他会递归遍历对象的所有属性，以完成深度的属性转换
-
-但是由于遍历只能遍历到对象的当前属性，无法监测到将来动态添加或者删除的属性，因此 Vue 提供了`$set`和`$delete`两个实例方法，但是 Vue 并不提倡这样使用，下面的[`dep`](#dep)部分会详细展开说明
-
-对于数组的话，Vue 会更改它的隐式原型，之所以这样做是因为 Vue 需要监听那些可能改变数组内容的方法
-
-> 数组 --> Vue 自定义的对象 --> `Array.prototype`
-
-总之，`observer`的目标，就是要让一个对象，它属性的读取、赋值、内部数组的变化都要能够被 Vue 感知到
-
-### 1.「手动转换响应式对象」
-
-Vue 提供了静态方法：`Vue.observable()`手动将普通对象转为响应式对象
-
-```js
-const obj = {
-    a: 1,
-    b: 2,
-    c: {
-        d: 3,
-        e: 4
-    },
-    f: [
-        {
-            a: 1,
-            b: 2
-        },
-        3, 4, 5, 6
-    ]
-}
-// 利用Vue提供的静态方法 Vue.observable, 将一个普通对象转化为响应式对象
-const reactiveObj = Vue.observable(obj)
-console.log(reactiveObj)
-```
-
-### 2.「data」
-
-Vue 不允许动态添加根级响应式属性，所以需要在组件实例化之前通过配置中的`data`字段，声明所有根级响应式属性，哪怕属性值为`null`。由此带来的好处有：
-
-1. 更易于维护：`data`对象就像组件的状态结构(schema)，提前声明所有响应式属性，后期有助于开发者理解和修改组件逻辑
-2. 消除了在依赖项跟踪系统中的一类边界情况
-3. 使 Vue 实例能够更好的配合类型检查系统工作
-
-### 3.「动态添加或删除属性」
-
-由于 Vue 会在初始化实例时，对所有属性(配置在`data`中的属性)执行`getter`和`setter`的转化
-
-那么对于「**动态添加或删除**」的属性，Vue 是无法自动检查其变化
-
-因此，Vue 提供了以下方式来手动完成响应式数据
-
-1. 添加：「`Vue.set(target, key, val)`」或「`this.$set(target, key, val)`」
-2. 删除：「`Vue.delete(target, key)`」或「`this.$delete(target, key)`」
-3. 批量操作：`this.reactiveObj = Object.assign({}, this.reactiveObj, obj)`
-
-```html
-<template>
-  <div class="demo-wrapper">
-    <p>obj.a -> {{ obj.a }}， obj.b -> {{ obj.b }}</p>
-
-    <!-- 非响应式数据操作 -->
-    <button @click="obj.b = 2">add obj.b</button>
-    <button @click="delete obj.a">delete obj.a</button>
-
-    <!-- 响应式数据操作 -->
-    <button @click="$set(obj, 'b', 2)">add obj.b</button>
-    <button @click="$delete(obj, 'a')">delete obj.a</button>
-  </div>
-</template>
-
-<script>
-export default {
-  data() {
-    return {
-      obj: {
-          a: 1,
-      },
-    }
-  }
-}
-</script>
-```
-
-### 4.「关于数组」
-
-由于 JS 的限制，Vue 不能检测到以下数组变动：
-
-1. 当利用索引直接改变数组项时，例如：`vm.arr[idx] = newValue`
-2. 当修改数组长度时，例如：`vm.arr.length = newLength`
-
-```html
-<script>
-export default {
-  data() {
-    return {
-      arr: [1, 2, 3, 4],
-    }
-  },
-  mounted() {
-    this.arr[0] = 8 // 不是响应式的
-    this.arr.length = 2 //不是响应式的
-  }
-}
-</script>
-```
-
-为了让上述数组操作具有响应式，采用以下方法处理：
-
-```html
-<script>
-export default {
-  data() {
-    return {
-      arr: [1, 2, 3, 4],
-    }
-  },
-  mounted() {
-    // 操作一：通过索引修改数组项
-    this.$set(arr, 0, 8) // 响应式的
-    // 或
-    Vue.set(arr, 0, 8)  // 响应式的
-    // 或
-    this.arr.splice(0, 1, 8) //响应式的
-  
-    // 操作二：修改数组长度为2
-    this.arr.splice(2) // 响应式的
-  }
-}
-</script>
-```
-
-除了可以通过静态方法`Vue.set()`和实例方法`this.$set()`响应式的修改数组项的值。还可以使用数组方法`splice()`
-
-因为，Vue 对一些可以改变数组自身内容的操作 API，如：`splice`、`sort`、`push`、`pop`、`reverse`、`shift`、`unshift`等进行了拦截和重写。从而在开发者使用这些API时，可以触发响应式数据，进而更新视图
-
-```html
-<script>
-export default{
-  data() {
-    return {
-      arr: [1,2,3,4]
-    }
-  },
-  mounted() {
-    console.log(this.arr._proto_ === Array.prototype)  // => false
-    console.log(this.arr._proto_._proto_ === Array.prototype)  //=> true
-  }
-}
-</script>
-```
-
-## Dep
-
-这里有两个问题没解决，就是读取属性时要做什么事，属性变化时又要做什么事，这个问题就得需要`dep`来解决
-
-`dep`的含义是`dependency`表示依赖的意思
-
-Vue 会为响应式对象中的每一个属性，对象本身，数组本身创建一个`dep`实例，每个`dep`实例都可以做两件事情：
-
-1. **依赖收集**：是谁在调用我
-2. **派发更新**：我变了，我要通知那些调用我的人
-
-当读取响应式对象的某一个属性时，他会进行**依赖收集**，有人用到了我
-
-当改变某个属性时，他会**派发更新**，那些用我的人听好了，我变了
-
-为什么尽量不要使用`$set`和`$delete`？
-
-因为如果模板上没有用到值的话，你凭空加了一个数据,理论上来说应该不会重新运行`render`函数，但是上一级的`dep`发现自身发生改变了，所以也会导致重新运行`render`函数
-
-所以 Vue 不建议使用`$set`和`$delete`，最好提前先写上数据，哪怕先给数据赋值为`null`
-
-
-## Watcher
-
-这里又出现了一个问题，就是`dep`如何知道是谁在用我呢
-
-`watcher`就解决了这个问题
-
-当函数执行的过程中，用到了响应式数据，响应式数据是无法知道是谁在用自己的
-
-所以，我们不要直接执行函数，而是把函数交给一个`watcher`的东西去执行，`watcher`是一个对象，每个函数执行时都应该创建一个`watcher`，通过`watcher`去执行
-
-`watcher`会创建一个全局变量，让全局变量记录当前负责执行的`watcher`等于自己，然后再去执行函数，在函数执行的过程中，如果发生了依赖收集，那么`dep`就会把这个全局变量记录下来，表示有一个`wathcer`用到了我这个属性
-
-当`dep`进行派发更新时，他会通知之前记录的所有`watcher`，我变了
-
-
-## Scheduler
-
-现在还剩下最后一个问题啊，就是`dep`通知`watcher`之后，如果`wathcer`执行对应的函数，就有可能导致频繁运行，从而导致效率低下，试想，如果一个交给`watcher`的函数，它里面用到了属性`a,b,c,d`，那么`a,b,c,d`都会被依赖收集，然后这四个值都依次重新赋值，那么就会触发四次更新，这样显然不行啊，所以当`watcher`收到派发更新的通知后，实际上并不是立即执行，而是通过一个叫做`nextTick`的工具方法，把这些需要执行的`watcher`放到事件循环的微队列，`nextTick`是通过`Promise.then`来完成的
-
-也就是说，在响应式数据发生变化时，`render`函数执行是异步的，并且在微队列中
-
-
-## 异步更新队列
-
-> Vue 侦听到数据变化，就会开启一个队列。但是组件不会立即重新渲染，而是先会缓存在同一个事件循环中发生的所有数据变化。此时如果同一个`watcher`被多次触发，只会被推入到队列中一次，这样可以「**避免不必要的计算和DOM更操作**」
->
-> 在下一个事件循环`tick`中， Vue 刷新队列并执行实际（已去重的）工作（更新渲染）。为此，Vue 提供了异步更新的监听接口：`Vue.nextTick(callback)`或`this.$nextTick(callback)`。当数据发生改变，异步 DOM 更新完成后，`callback`回调将被调用。开发者可以在回调中，操作更新后的 DOM
-
-```html
-<script>
-export default {
-  data() {
-    return {
-      a: 1,
-      b: 2,
-      c: 3,
-      d: 4,
-    }
-  },
-  methods: {
-    changeAllData() {
-      this.$nextTick(function () {
-        const pre = document.querySelector("pre")
-        console.log(pre.textContent)
-      })
-
-      this.a = this.b = this.c = this.d = 10
-
-      this.$nextTick(function () {
-        const pre = document.querySelector("pre")
-        console.log(pre.textContent)
-      })
-    },
-  },
-  render(h) {
-    console.log('render function')
-    return h('div', [
-      h('pre', `${this.a}, ${this.b}, ${this.c}, ${this.d}`),
-      h('button', {
-        on: {
-          click: () => {
-            this.changeAllData()
-          }
-        }
-      }, 'change all data')
-    ])
-  }
-}
-</script>
-```
-
-上面对例子中，通过使用了[`render`](https://v2.cn.vuejs.org/v2/guide/render-function.html#%E8%8A%82%E7%82%B9%E3%80%81%E6%A0%91%E4%BB%A5%E5%8F%8A%E8%99%9A%E6%8B%9F-DOM)函数来方便查看组件渲染时被调用的过程。
-
-在组件定义时，直接给出`render`函数，当点击按钮后，会在数据修改前后，使用`nextTick`工具方法。分别写入两个读取界面 DOM 的函数，结果会发现，第一个`$nextTick`回调函数获取的数据为旧数据，第二个 `$nextTick`回调函数获取的数据为新数据
-
-分析一下：
-
-1. 第一个`$nextTick`，会将自己的回调函数（fn1）加入到当前的异步队列中
-2. 修改数据后，经过派发更新，Scheduler 会将包含了`watcher`队列执行逻辑的函数（fn2）加入到当前的异步队列中
-3. 第二个`$nextTick`，会将自己的回调函数（fn3）加入到当前的异步队列中
-
-当异步队列执行时，会依次执行`fn1`、`fn2`、`fn3`。而当`fn2`执行后，界面才会更新最新数据，所以`fn1`获取的界面数据为旧数据，`fn3`为新数据
-
-
-另外，在`this.$nextTick()`其内部尝试使用原生`Promise.then`、`MutationObserve`、`setImmediate`的时候，如果执行环境不支持，则会采用`setTimeout`替代，并且最终返回一个`Promise`对象。所以可以使用`async/await`语法替代`callback`的写法
-
-```html
-<script>
-export default {
-  data() {
-    return {
-      a: 'hello'
-    }
-  },
-  // $nextTick 结合 async/await语法使用
-  async mounted() {
-    this.a = 'world'
-    console.log(this.$el.textContent)  // -> 'hello'
-    await this.$nextTick()
-    console.log(this.$el.textContent) // -> 'world'
-  }
-}
-</script>
-```
-
-
-## 总体流程图
-
-![总体流程图](./assets/总体流程图.png)
+当运行`render`函数的时候，发现用到了响应式数据，这时候就会运行`getter`函数，然后`watcher`（发布订阅）就会记录下来。当响应式数据发生变化的时候，就会调用`setter`函数，`watcher`就会再记录下来这次的变化，然后通知`render`函数，数据发生了变化，然后就会重新运行`render`函数，重新生成虚拟 DOM 树

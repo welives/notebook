@@ -6,7 +6,7 @@
 
 <center><img src="/vue/assets/Vue2生命周期.png" width="70%" ></center>
 
-在实际项目开发过程中，会非常频繁地和 Vue 组件的生命周期打交道，接下来将从源码的角度来看一下这些生命周期的钩子函数是如何被执行的。
+在实际项目开发过程中，会非常频繁地和`Vue`组件的生命周期打交道，接下来将从源码的角度来看一下这些生命周期的钩子函数是如何被执行的。
 
 源码中最终执行生命周期的函数都是调用`callHook`方法
 
@@ -17,7 +17,6 @@ export function callHook(
   args?: any[],
   setContext = true
 ) {
-  // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()
   const prev = currentInstance
   setContext && setCurrentInstance(vm)
@@ -78,7 +77,6 @@ export function mountComponent(
   callHook(vm, 'beforeMount')
 
   let updateComponent
-  /* istanbul ignore if */
   if (__DEV__ && config.performance && mark) {
     updateComponent = () => {
       const name = vm._name
@@ -109,15 +107,7 @@ export function mountComponent(
       }
     }
   }
-
-  if (__DEV__) {
-    watcherOptions.onTrack = e => callHook(vm, 'renderTracked', [e])
-    watcherOptions.onTrigger = e => callHook(vm, 'renderTriggered', [e])
-  }
-
-  // we set this to vm._watcher inside the watcher's constructor
-  // since the watcher's initial patch may call $forceUpdate (e.g. inside child
-  // component's mounted hook), which relies on vm._watcher being already defined
+  // ...
   new Watcher(
     vm,
     updateComponent,
@@ -127,7 +117,6 @@ export function mountComponent(
   )
   hydrating = false
 
-  // flush buffer for flush: "pre" watchers queued in setup()
   const preWatchers = vm._preWatchers
   if (preWatchers) {
     for (let i = 0; i < preWatchers.length; i++) {
@@ -135,8 +124,6 @@ export function mountComponent(
     }
   }
 
-  // manually mounted instance, call mounted on self
-  // mounted is called for render-created child components in its inserted hook
   if (vm.$vnode == null) {
     vm._isMounted = true
     callHook(vm, 'mounted')
@@ -153,8 +140,6 @@ export function mountComponent(
 
 ```ts
 function invokeInsertHook(vnode, queue, initial) {
-  // delay insert hooks for component root nodes, invoke them after the
-  // element is really inserted
   if (isTrue(initial) && isDef(vnode.parent)) {
     vnode.parent.data.pendingInsert = queue
   } else {
@@ -176,18 +161,7 @@ const componentVNodeHooks = {
       componentInstance._isMounted = true
       callHook(componentInstance, 'mounted')
     }
-    if (vnode.data.keepAlive) {
-      if (context._isMounted) {
-        // vue-router#1212
-        // During updates, a kept-alive component's child components may
-        // change, so directly walking the tree here may call activated hooks
-        // on incorrect children. Instead we push them into a queue which will
-        // be processed after the whole patch process ended.
-        queueActivatedComponent(componentInstance)
-      } else {
-        activateChildComponent(componentInstance, true /* direct */)
-      }
-    }
+    // ...
   },
   // ...
 }
@@ -301,8 +275,6 @@ export default class Watcher implements DepTarget {
   ) {
     recordEffectScope(
       this,
-      // if the active effect scope is manually created (not a component scope),
-      // prioritize it
       activeEffectScope && !activeEffectScope._vm
         ? activeEffectScope
         : vm
