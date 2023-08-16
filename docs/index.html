@@ -10,11 +10,11 @@
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
     />
     <link
-      href="https://cdn.bootcdn.net/ajax/libs/docsify/4.13.0/themes/vue.min.css"
+      href="//cdn.bootcdn.net/ajax/libs/docsify/4.13.0/themes/vue.min.css"
       rel="stylesheet"
     />
     <link
-      href="https://cdn.bootcdn.net/ajax/libs/prism/1.29.0/themes/prism.min.css"
+      href="//cdn.bootcdn.net/ajax/libs/prism/1.29.0/themes/prism.min.css"
       rel="stylesheet"
     />
     <link
@@ -34,9 +34,6 @@
         coverpage: true,
         // 侧边栏支持，默认加载的是项目根目录下的_sidebar.md文件
         loadSidebar: true,
-        alias: {
-          '/.*/_sidebar.md': '/_sidebar.md',
-        },
         // 自定义侧边栏后默认不会再生成目录，设置生成目录的最大层级（建议配置为2-4）
         subMaxLevel: 3,
         // 导航栏支持
@@ -51,28 +48,37 @@
           noData: '找不到结果',
           depth: 3,
         },
+        alias: {
+          '/.*/_sidebar.md': '/_sidebar.md',
+          '/.*/_navbar.md': '/_navbar.md',
+        },
       }
     </script>
     <!-- Docsify v4 -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/docsify/4.13.0/docsify.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/docsify/4.13.0/docsify.min.js"></script>
+    <!-- 侧栏优化 -->
     <script src="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/docsify-sidebar-collapse.min.js"></script>
+    <!-- 阅读进度条 -->
+    <script src="//cdn.jsdelivr.net/npm/docsify-progress@latest/dist/progress.min.js"></script>
     <!-- 外链脚本支持 -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/docsify/4.13.0/plugins/external-script.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/docsify/4.13.0/plugins/external-script.min.js"></script>
     <!-- emoji表情支持 -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/docsify/4.13.0/plugins/emoji.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/docsify/4.13.0/plugins/emoji.min.js"></script>
     <!-- 图片放大缩小支持 -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/docsify/4.13.0/plugins/zoom-image.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/docsify/4.13.0/plugins/zoom-image.min.js"></script>
     <!-- 搜索功能支持 -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/docsify/4.13.0/plugins/search.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/docsify/4.13.0/plugins/search.min.js"></script>
     <!--在所有的代码块上添加一个简单的Click to copy按钮来允许用户从你的文档中轻易地复制代码-->
-    <script src="https://cdn.bootcdn.net/ajax/libs/docsify-copy-code/2.1.1/docsify-copy-code.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/docsify-copy-code/2.1.1/docsify-copy-code.min.js"></script>
+    <!-- back-to-top -->
+    <script src="//cdn.jsdelivr.net/gh/Sumsung524/docsify-backTop/dist/docsify-backTop.min.js"></script>
     <!-- 代码高亮 -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-dart.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-dart.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
+    <script src="//cdn.bootcdn.net/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
   </body>
 </html>
