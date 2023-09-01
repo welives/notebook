@@ -15,30 +15,9 @@
 
 来看一个简单的例子：
 
-```html
-<body>
-  <div class="container">
-    <div class="item"></div>
-  </div>
-</body>
-<style>
-  .container{
-    width: 500px;
-    height: 300px;
-    background-color: skyblue;
-  }
-  .item{
-    width: 50%;
-    height: 50%;
-    background-color: red;
-  }
-</style>
-```
+[](https://codepen.io/welives/embed/MWZevaP?default-tab=css%2Cresult ':include :type=iframe width=100% height=450px scrolling=no frameborder=no loading=lazy allowtransparency=true allowfullscreen=true')
 
 请仔细阅读上面的代码，然后你认为`div.item`这个盒子的宽高是多少？
-
-![CSS包含块案例_1](./assets/CSS包含块案例_1.png)
-
 
 相信你能够很自信的回答这个简单的问题，`div.item`盒子的`width`为`250px`，`height`为`150px`
 
@@ -57,45 +36,9 @@
 
 前面两条实际上都还比较好理解，第三条往往是初学者容易比较忽视的，我们来看一个示例：
 
-```html
-<body>
-  <div class="container">
-    <div class="item">
-      <div class="item2"></div>
-    </div>
-  </div>
-</body>
-<style>
-  .container {
-    width: 500px;
-    height: 300px;
-    background-color: skyblue;
-    position: relative;
-  }
-  .item {
-    width: 300px;
-    height: 150px;
-    border: 5px solid;
-    margin-left: 100px;
-  }
-  .item2 {
-    width: 100px;
-    height: 100px;
-    background-color: red;
-    position: absolute;
-    left: 10px;
-    top: 10px;
-  }
-</style>
-```
+[](https://codepen.io/welives/embed/ExGyvPz?default-tab=css%2Cresult ':include :type=iframe width=100% height=450px scrolling=no frameborder=no loading=lazy allowtransparency=true allowfullscreen=true')
 
-首先阅读上面的代码，然后你能在脑海里面想出其大致的样子么？或者用笔和纸画一下也行
-
-![CSS包含块案例_2](./assets/CSS包含块案例_2.png)
-
-怎么样？有没有和你所想象的对上？
-
-其实原因也非常简单，根据上面的第三条规则，对于`div.item2`来讲，它的包含块应该是`div.container`，而非`div.item`
+根据上面的第三条规则，对于`div.item2`来讲，它的包含块应该是`div.container`，而非`div.item`
 
 如果你能把上面非根元素的包含块判定规则掌握，那么关于包含块的知识你就已经掌握 **80%** 了
 
@@ -107,42 +50,9 @@
 
 我们再来看一个例子：
 
-```html
-<body>
-  <div class="container">
-    <div class="item">
-      <div class="item2"></div>
-    </div>
-  </div>
-</body>
-<style>
-  .container {
-    width: 500px;
-    height: 300px;
-    background-color: skyblue;
-    position: relative;
-  }
-  .item {
-    width: 300px;
-    height: 150px;
-    border: 5px solid;
-    margin-left: 100px;
-    transform: rotate(0deg); /* 新增代码 */
-  }
-  .item2 {
-    width: 100px;
-    height: 100px;
-    background-color: red;
-    position: absolute;
-    left: 10px;
-    top: 10px;
-  }
-</style>
-```
+[](https://codepen.io/welives/embed/WNLxEwM?default-tab=css%2Cresult ':include :type=iframe width=100% height=450px scrolling=no frameborder=no loading=lazy allowtransparency=true allowfullscreen=true')
 
 我们对于上面的代码只新增了一条声明，那就是`transform: rotate(0deg)`，此时的渲染效果却发生了改变，如下图所示：
-
-![CSS包含块案例_3](./assets/CSS包含块案例_3.png)
 
 可以看到，此时对于`div.item2`来讲，包含块就变成了`div.item`
 
