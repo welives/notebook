@@ -641,7 +641,7 @@ export default class Watcher implements DepTarget {
 
 ## 原理图
 
-![Vue响应式原理](./assets/Vue响应式原理.png)
+![Vue响应式原理](./assets/Vue响应式原理.png ':size=70%')
 
 通过`Object.defineProperty`遍历对象的每一个属性，把每一个属性变成一个`getter`和`setter`函数，读取属性的时候调用`getter`，给属性赋值的时候就会调用`setter`
 

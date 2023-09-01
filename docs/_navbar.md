@@ -3,7 +3,7 @@
   - [JS/TS](javascript/README.md)
   - [CSS](css/README.md)
   - [Vue](vue/README.md)
-  - React
+  - [React](react/README.md)
   - [Flutter](flutter/README.md)
 
 - [主页](README.md)
