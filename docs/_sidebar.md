@@ -7,7 +7,7 @@
   - [CSS 包含块](css/CSS包含块)
   - [线性渐变](css/线性渐变)
   - [瀑布流](css/瀑布流)
-  - [常见问题](css/常见问题)
+  - [奇技淫巧](css/奇技淫巧)
 - [JS/TS](javascript/README.md)
   - [this指向](javascript/this指向)
   - [继承](javascript/继承)
