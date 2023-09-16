@@ -11,8 +11,7 @@ a[0] = 'hello';
 print(a); // {name: 煎蛋, age: 18, 0: hello}
 ```
 
-> key相同时，后面声明的覆盖前面的数据
-
+> key 相同时，后面声明的覆盖前面的数据
 
 ### 强类型，通过泛型约束`key`和`value`
 
@@ -22,7 +21,6 @@ a[0] = 'java';
 a[1] = 'python';
 print(a); // {0: java, 1: python}
 ```
-
 
 ### 常用方法
 

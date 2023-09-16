@@ -5,18 +5,17 @@
 箭头函数排在第一个是因为它的 this 不会被改变，所以只要当前函数是箭头函数，那么就不用再看其他规则了
 
 箭头函数的`this`是在创建它时外层`this`的指向
+
 - **创建箭头函数时**，就已经确定了它的`this`指向
 - 箭头函数内的`this`指向**外层的`this`**
 
 所以要知道箭头函数的`this`就得先知道外层`this`的指向，需要继续在外层应用七步口诀
-
 
 ## 2.`new`
 
 **当使用`new`关键字调用函数时，函数中的`this`一定是 JS 创建的新对象**
 
 > 箭头函数不能作为构造函数，也就不能和`new`一起使用
-
 
 ## 3.`bind`
 
@@ -51,7 +50,6 @@ bindFunc = func.bind(1)
 new bindFunc() // Object true, 口诀 2 「new」优先
 ```
 
-
 ## 4.`apply`和`call`
 
 `apply()`和`call()`的第一个参数都是`this`，区别在于通过`apply`调用时实参是放到数组中的，而通过`call`调用时实参是逗号分隔的
@@ -76,7 +74,6 @@ bindFunc = func.bind(1)
 bindFunc.apply(2) // 1, 口诀 3 「bind」优先
 ```
 
-
 ## 5.`obj.`
 
 ```js
@@ -87,7 +84,6 @@ obj = { x: 1 }
 obj.func = func
 obj.func() // 1
 ```
-
 
 ## 6.直接调用
 
@@ -104,10 +100,10 @@ function outerFunc() {
 outerFunc.bind({ x: 1 })()
 ```
 
-
 ## 7.不在函数里
 
 不在函数中的场景，可分为浏览器的`<script />`标签里，或 Node.js 的模块文件里
+
 - 在`<script />`标签里，`this`指向`Window`
 - 在 Node.js 的模块文件里，`this`指向`Module`的默认导出对象，也就是`module.exports`
 
@@ -117,9 +113,9 @@ outerFunc.bind({ x: 1 })()
 
 ```js
 function func() {
-  console.log("function func:", this)
+  console.log('function func:', this)
   ;(() => {
-    console.log("arrow function: ", this)
+    console.log('arrow function: ', this)
   })()
 }
 func()

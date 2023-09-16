@@ -35,7 +35,6 @@ android.call(); // Android Calling...
 ios.call(); // Ios Calling...
 ```
 
-
 ### 单例模式
 
 ```dart
@@ -53,7 +52,6 @@ var p2 = Mobile();
 print(identical(p1, p2)); // true,两个实例指向同一内存地址
 Mobile().call();
 ```
-
 
 ### 减少重复实例对象
 

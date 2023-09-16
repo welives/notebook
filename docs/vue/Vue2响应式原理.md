@@ -1,8 +1,8 @@
 <center><h1>Vue2响应式原理</h1></center>
 
-> 首先要知道 Vue2 是2013年基于 ES5 开发出来的，我们常说的重渲染就是重新运行`render`函数
+> 首先要知道 Vue2 是 2013 年基于 ES5 开发出来的，我们常说的重渲染就是重新运行`render`函数
 >
-> Vue2 的响应式原理是利⽤ ES5 的⼀个API，`Object.defineProperty`对数据进⾏劫持结合发布订阅模式的⽅式来实现的
+> Vue2 的响应式原理是利⽤ ES5 的⼀个 API，`Object.defineProperty`对数据进⾏劫持结合发布订阅模式的⽅式来实现的
 
 ## 思路
 
@@ -65,7 +65,7 @@ function initData(vm: Component) {
 export function observe(
   value: any,
   shallow?: boolean,
-  ssrMockReactivity?: boolean
+  ssrMockReactivity?: boolean,
 ): Observer | void {
   if (value && hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     return value.__ob__
@@ -131,7 +131,7 @@ export function def(obj: Object, key: string, val: any, enumerable?: boolean) {
     value: val,
     enumerable: !!enumerable,
     writable: true,
-    configurable: true
+    configurable: true,
   })
 }
 ```
@@ -149,7 +149,7 @@ export function defineReactive(
   val?: any,
   customSetter?: Function | null,
   shallow?: boolean,
-  mock?: boolean
+  mock?: boolean,
 ) {
   const dep = new Dep() // 依赖管理器
   // ...
@@ -157,7 +157,7 @@ export function defineReactive(
     (!getter || setter) &&
     (val === NO_INITIAL_VALUE || arguments.length === 2)
   ) {
-    val = obj[key]  // 计算出对应key的值
+    val = obj[key] // 计算出对应key的值
   }
 
   let childOb = !shallow && observe(val, false, mock) // 递归的转化对象的嵌套属性
@@ -169,7 +169,7 @@ export function defineReactive(
     },
     set: function reactiveSetter(newVal) {
       // 派发更新
-    }
+    },
   })
 
   return dep
@@ -188,7 +188,7 @@ export function defineReactive(
 export function mountComponent(
   vm: Component,
   el: Element | null | undefined,
-  hydrating?: boolean
+  hydrating?: boolean,
 ): Component {
   // ...
   let updateComponent
@@ -209,7 +209,7 @@ export function mountComponent(
     updateComponent,
     noop,
     watcherOptions,
-    true /* isRenderWatcher */
+    true /* isRenderWatcher */,
   )
   // ...
 }
@@ -233,25 +233,25 @@ export default class Watcher implements DepTarget {
     expOrFn: string | (() => any),
     cb: Function,
     options?: WatcherOptions | null,
-    isRenderWatcher?: boolean
+    isRenderWatcher?: boolean,
   ) {
     // ...
     // 是否是render-watcher
     if ((this.vm = vm) && isRenderWatcher) {
-      vm._watcher = this  // 当前组件下挂载vm._watcher属性
+      vm._watcher = this // 当前组件下挂载vm._watcher属性
     }
     // ...
-    this.before = options.before  // render-watcher特有属性
-    this.getter = expOrFn         // 第二个参数
+    this.before = options.before // render-watcher特有属性
+    this.getter = expOrFn // 第二个参数
     // ...
     this.value = this.lazy ? undefined : this.get() // 实例化为user-watcher和render-watcher时就会执行this.get()方法
   }
   get() {
-    pushTarget(this)  // 添加
+    pushTarget(this) // 添加
     let value
     const vm = this.vm
     try {
-      value = this.getter.call(vm, vm)  // 执行vm._update(vm._render())
+      value = this.getter.call(vm, vm) // 执行vm._update(vm._render())
     } catch (e: any) {
       // ...
     } finally {
@@ -267,7 +267,7 @@ export default class Watcher implements DepTarget {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
-        dep.addSub(this)  // 将当前watcher收集到dep实例中
+        dep.addSub(this) // 将当前watcher收集到dep实例中
       }
     }
   }
@@ -284,16 +284,16 @@ export default class Dep {
   // ...
 }
 Dep.target = null
-const targetStack: Array<DepTarget | null | undefined> = []   // 组件从父到子对应的watcher实例集合
+const targetStack: Array<DepTarget | null | undefined> = [] // 组件从父到子对应的watcher实例集合
 
 export function pushTarget(target?: DepTarget | null) {
-  targetStack.push(target)  // 添加到集合内
-  Dep.target = target       // 当前的watcher实例
+  targetStack.push(target) // 添加到集合内
+  Dep.target = target // 当前的watcher实例
 }
 
 export function popTarget() {
-  targetStack.pop()   // 移除数组最后一项
-  Dep.target = targetStack[targetStack.length - 1]    // 赋值为数组最后一项
+  targetStack.pop() // 移除数组最后一项
+  Dep.target = targetStack[targetStack.length - 1] // 赋值为数组最后一项
 }
 ```
 
@@ -308,7 +308,7 @@ export function defineReactive(
   val?: any,
   customSetter?: Function | null,
   shallow?: boolean,
-  mock?: boolean
+  mock?: boolean,
 ) {
   // ..
   Object.defineProperty(obj, key, {
@@ -322,10 +322,10 @@ export function defineReactive(
           dep.depend({
             target: obj,
             type: TrackOpTypes.GET,
-            key
+            key,
           })
         } else {
-          dep.depend()  // 收集起来，放入到上面的dep依赖管理器内
+          dep.depend() // 收集起来，放入到上面的dep依赖管理器内
         }
         if (childOb) {
           childOb.dep.depend()
@@ -338,14 +338,14 @@ export function defineReactive(
     },
     set: function reactiveSetter(newVal) {
       // 派发更新
-    }
+    },
   })
 
   return dep
 }
 ```
 
-这个时候我们知道`watcher`是个什么东西了，简单理解就是数据和组件之间一个通信工具的封装，当某个数据被组件读取时，就将依赖数据的组件使用Dep这个类给收集起来
+这个时候我们知道`watcher`是个什么东西了，简单理解就是数据和组件之间一个通信工具的封装，当某个数据被组件读取时，就将依赖数据的组件使用 Dep 这个类给收集起来
 
 ### `Dep`
 
@@ -361,7 +361,7 @@ export default class Dep {
 
   constructor() {
     this.id = uid++
-    this.subs = []  // 对象某个key的依赖集合
+    this.subs = [] // 对象某个key的依赖集合
   }
   // 添加watcher实例到数组内
   addSub(sub: DepTarget) {
@@ -374,7 +374,7 @@ export default class Dep {
       if (__DEV__ && info && Dep.target.onTrack) {
         Dep.target.onTrack({
           effect: Dep.target,
-          ...info
+          ...info,
         })
       }
     }
@@ -393,7 +393,7 @@ export default class Watcher implements DepTarget {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
-        dep.addSub(this)   // 执行dep的addSub方法
+        dep.addSub(this) // 执行dep的addSub方法
       }
     }
   }
@@ -417,7 +417,7 @@ export function defineReactive(
   val?: any,
   customSetter?: Function | null,
   shallow?: boolean,
-  mock?: boolean
+  mock?: boolean,
 ) {
   // ..
   Object.defineProperty(obj, key, {
@@ -442,21 +442,21 @@ export function defineReactive(
         value.value = newVal
         return
       } else {
-        val = newVal  // 赋值
+        val = newVal // 赋值
       }
-      childOb = !shallow && observe(newVal, false, mock)  // 如果新值是对象也递归包装
+      childOb = !shallow && observe(newVal, false, mock) // 如果新值是对象也递归包装
       if (__DEV__) {
         dep.notify({
           type: TriggerOpTypes.SET,
           target: obj,
           key,
           newValue: newVal,
-          oldValue: value
+          oldValue: value,
         })
       } else {
-        dep.notify()  // 通知更新
+        dep.notify() // 通知更新
       }
-    }
+    },
   })
 
   return dep
@@ -469,7 +469,7 @@ export function defineReactive(
 export default class Dep {
   // ...
   notify(info?: DebuggerEventExtraInfo) {
-    const subs = this.subs.filter(s => s) as DepTarget[]
+    const subs = this.subs.filter((s) => s) as DepTarget[]
     if (__DEV__ && !config.async) {
       subs.sort((a, b) => a.id - b.id)
     }
@@ -479,10 +479,10 @@ export default class Dep {
         sub.onTrigger &&
           sub.onTrigger({
             effect: subs[i],
-            ...info
+            ...info,
           })
       }
-      sub.update()  // 挨个触发watcher的update方法
+      sub.update() // 挨个触发watcher的update方法
     }
   }
 }
@@ -519,7 +519,7 @@ export function queueWatcher(watcher: Watcher) {
     return
   }
 
-  has[id] = true  // 已经推入
+  has[id] = true // 已经推入
   if (!flushing) {
     queue.push(watcher) // 推入到队列
   } else {
@@ -546,27 +546,30 @@ export function queueWatcher(watcher: Watcher) {
 ```js
 export default {
   data() {
-    return {  // 都被模板引用了
+    return {
+      // 都被模板引用了
       num: 0,
       name: 'cc',
-      sex: 'man'
+      sex: 'man',
     }
   },
   methods: {
-    changeNum() {  // 赋值100次
-      for(let i = 0; i < 100; i++) {
+    changeNum() {
+      // 赋值100次
+      for (let i = 0; i < 100; i++) {
         this.num++
       }
     },
-    changeInfo() {  // 一次赋值多个属性的值
+    changeInfo() {
+      // 一次赋值多个属性的值
       this.name = 'ww'
       this.sex = 'woman'
-    }
-  }
+    },
+  },
 }
 ```
 
-这里的三个响应式属性它们收集都是同一个`render-watcher`。所以当赋值100次的情况出现时，再将当前的`render-watcher`推入到的队列之后，之后赋值触发的`set`队列内并不会添加任何`render-watcher`；当同时赋值多个属性时也是，因为它们收集的都是同一个`render-watcher`，所以推入到队列一次之后就不会添加了
+这里的三个响应式属性它们收集都是同一个`render-watcher`。所以当赋值 100 次的情况出现时，再将当前的`render-watcher`推入到的队列之后，之后赋值触发的`set`队列内并不会添加任何`render-watcher`；当同时赋值多个属性时也是，因为它们收集的都是同一个`render-watcher`，所以推入到队列一次之后就不会添加了
 
 > 知识点：`Vue`还是挺聪明的，通过这个示例能看出来，派发更新通知的粒度是组件级别，至于组件内是哪个属性赋值了，派发更新并不关心，而且怎么高效更新这个视图，那是之后`diff`比对做的事情。
 
@@ -585,7 +588,7 @@ function flushSchedulerQueue() {
     watcher = queue[index]
     // render-watcher独有属性
     if (watcher.before) {
-      watcher.before()  // 触发 beforeUpdate 钩子
+      watcher.before() // 触发 beforeUpdate 钩子
     }
     id = watcher.id
     has[id] = null
@@ -608,11 +611,7 @@ export default class Watcher implements DepTarget {
   run() {
     if (this.active) {
       const value = this.get() // 其实就是重新执行一次get方法
-      if (
-        value !== this.value ||
-        isObject(value) ||
-        this.deep
-      ) {
+      if (value !== this.value || isObject(value) || this.deep) {
         const oldValue = this.value
         this.value = value
         if (this.user) {
@@ -622,7 +621,7 @@ export default class Watcher implements DepTarget {
             this.vm,
             [value, oldValue],
             this.vm,
-            info
+            info,
           )
         } else {
           this.cb.call(this.vm, value, oldValue)

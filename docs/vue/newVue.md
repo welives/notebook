@@ -35,7 +35,7 @@ Vue.prototype._init = function (options?: Record<string, any>) {
 const mount = Vue.prototype.$mount
 Vue.prototype.$mount = function (
   el?: string | Element,
-  hydrating?: boolean
+  hydrating?: boolean,
 ): Component {
   el = el && query(el)
   // 省略一系列初始化以及逻辑判断代码
@@ -48,7 +48,7 @@ Vue.prototype.$mount = function (
 ```ts
 Vue.prototype.$mount = function (
   el?: string | Element,
-  hydrating?: boolean
+  hydrating?: boolean,
 ): Component {
   el = el && inBrowser ? query(el) : undefined
   return mountComponent(this, el, hydrating)
@@ -61,7 +61,7 @@ Vue.prototype.$mount = function (
 export function mountComponent(
   vm: Component,
   el: Element | null | undefined,
-  hydrating?: boolean
+  hydrating?: boolean,
 ): Component {
   vm.$el = el
   // 省略一系列其它代码
@@ -69,7 +69,7 @@ export function mountComponent(
   if (__DEV__ && config.performance && mark) {
     updateComponent = () => {
       // ...
-      // 生成虚拟 vnode 
+      // 生成虚拟 vnode
       const vnode = vm._render()
       // ..
       // 更新 DOM
@@ -87,7 +87,7 @@ export function mountComponent(
       if (vm._isMounted && !vm._isDestroyed) {
         callHook(vm, 'beforeUpdate')
       }
-    }
+    },
   }
   // 省略一系列其它代码
 
@@ -97,7 +97,7 @@ export function mountComponent(
     updateComponent,
     noop,
     watcherOptions,
-    true /* isRenderWatcher */
+    true /* isRenderWatcher */,
   )
   // 省略一系列其它代码
   return vm
@@ -148,7 +148,7 @@ export function _createElement(
   tag?: string | Component | Function | Object,
   data?: VNodeData,
   children?: any,
-  normalizationType?: number
+  normalizationType?: number,
 ): VNode | Array<VNode> {
   // 省略一系列非主线代码
 
@@ -165,7 +165,7 @@ export function _createElement(
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
     if (config.isReservedTag(tag)) {
       //...
-      
+
       // 创建虚拟 vnode
       vnode = new VNode(
         config.parsePlatformTagName(tag),
@@ -173,7 +173,7 @@ export function _createElement(
         children,
         undefined,
         undefined,
-        context
+        context,
       )
     } else if (
       (!data || !data.pre) &&
@@ -243,7 +243,7 @@ Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
 }
 ```
 
-往后参考[Diff算法](vue/Diff算法)篇章
+往后参考[Diff 算法](vue/Diff算法)篇章
 
 ---
 

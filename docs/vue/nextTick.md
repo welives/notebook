@@ -4,26 +4,26 @@
 
 ```html
 <template>
-    <div>
-        <div ref="message">{{message}}</div>
-        <button @click="handleClick">点击</button>
-    </div>
+  <div>
+    <div ref="message">{{message}}</div>
+    <button @click="handleClick">点击</button>
+  </div>
 </template>
 <script>
-export default {
-    data () {
-        return {
-            message: 'begin'
-        };
-    },
-    methods () {
-        handleClick () {
-            this.message = 'end';
-            console.log(this.$refs.message.innerText); // 打印“begin”
-        }
-    }
-}
-</script> 
+  export default {
+      data () {
+          return {
+              message: 'begin'
+          };
+      },
+      methods () {
+          handleClick () {
+              this.message = 'end';
+              console.log(this.$refs.message.innerText); // 打印“begin”
+          }
+      }
+  }
+</script>
 ```
 
 打印出来的结果是`begin`，我们在点击事件里明明将`message`赋值为`end`，而获取真实 DOM 节点的`innerHTML`却没有得到预期中的`begin`，为什么？
@@ -34,32 +34,32 @@ export default {
 
 ```html
 <div id="app">
-    <div class="msg">
-        <form-report ref="child" :name="childName"></form-report>
-    </div>
+  <div class="msg">
+    <form-report ref="child" :name="childName"></form-report>
+  </div>
 </div>
 <script>
-Vue.component('form-report', {
+  Vue.component('form-report', {
     props: ['name'],
     methods: {
-        showName(){
-            console.log(this.name)
-        }
+      showName() {
+        console.log(this.name)
+      },
     },
-    template: '<div>{{name}}</div>'
-})
-new Vue({
+    template: '<div>{{name}}</div>',
+  })
+  new Vue({
     el: '#app',
-    data: function(){
-        return {
-            childName: '',
-        }
+    data: function () {
+      return {
+        childName: '',
+      }
     },
-    mounted(){
-        this.childName = '我是子组件名字'
-        this.$refs.child.showName()     // '' 空
-    }
-})
+    mounted() {
+      this.childName = '我是子组件名字'
+      this.$refs.child.showName() // '' 空
+    },
+  })
 </script>
 ```
 
@@ -69,7 +69,7 @@ new Vue({
 
 ## 异步更新
 
-我们发现上述两个问题的共同点，不管子组件还是父组件，都是在给`data`中赋值后立马去查看数据导致的。由于**查看数据这个动作是同步操作**的，而且都是在赋值之后；因此我们猜测一下，给**数据赋值操作是一个异步操作**，并没有马上执行，Vue官网对数据操作是这么描述的：
+我们发现上述两个问题的共同点，不管子组件还是父组件，都是在给`data`中赋值后立马去查看数据导致的。由于**查看数据这个动作是同步操作**的，而且都是在赋值之后；因此我们猜测一下，给**数据赋值操作是一个异步操作**，并没有马上执行，Vue 官网对数据操作是这么描述的：
 
 > 可能你还没有注意到，`Vue`在更新 DOM 时是异步执行的。只要侦听到数据变化，`Vue`将开启一个队列，并缓冲在同一事件循环中发生的所有数据变更。如果同一个`watcher`被多次触发，只会被推入到队列中一次。这种在缓冲时去除重复数据对于避免不必要的计算和 DOM 操作是非常重要的。然后，在`下一个的事件循环“tick”`中，`Vue`刷新队列并执行实际(已去重的)工作。`Vue`在内部对异步队列尝试使用原生的 `Promise.then`、`MutationObserver`和`setImmediate`，如果执行环境不支持，则会采用`setTimeout(fn, 0)`代替
 
@@ -82,21 +82,20 @@ new Vue({
 ```js
 // 第一个例子
 this.message = '我是测试文字'
-this.$nextTick(()=>{
-    console.log(this.$refs.message.innerText) // 我是测试文字
+this.$nextTick(() => {
+  console.log(this.$refs.message.innerText) // 我是测试文字
 })
 
 // 第二个例子
 this.childName = '我是子组件名字'
-this.$nextTick(()=>{
-    this.$refs.child.showName()     // 我是子组件名字
+this.$nextTick(() => {
+  this.$refs.child.showName() // 我是子组件名字
 })
 ```
 
 ---
 
-## nextTick源码分析
-
+## nextTick 源码分析
 
 了解了`nextTick`的用法和原理之后，我们就来看一下`Vue`是怎么来实现这波“操作”的
 
@@ -109,8 +108,8 @@ import { isIE, isIOS, isNative } from './env'
 
 export let isUsingMicroTask = false
 
-const callbacks: Array<Function> = []       // 需要执行的回调函数
-let pending = false                         // 是否正在执行回调函数
+const callbacks: Array<Function> = [] // 需要执行的回调函数
+let pending = false // 是否正在执行回调函数
 
 // 执行所有callback
 function flushCallbacks() {
@@ -122,7 +121,7 @@ function flushCallbacks() {
   }
 }
 
-let timerFunc                               // 触发执行回调函数
+let timerFunc // 触发执行回调函数
 
 /**
  * 四种尝试得到timerFunc的方法
@@ -150,7 +149,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const observer = new MutationObserver(flushCallbacks)
   const textNode = document.createTextNode(String(counter))
   observer.observe(textNode, {
-    characterData: true
+    characterData: true,
   })
   timerFunc = () => {
     counter = (counter + 1) % 2
@@ -198,7 +197,7 @@ export function nextTick(cb?: (...args: any[]) => any, ctx?: object) {
   }
   // $flow-disable-line
   if (!cb && typeof Promise !== 'undefined') {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       _resolve = resolve
     })
   }
@@ -222,9 +221,9 @@ const observer = new MutationObserver(callback)
 这个时候你只是给`MutationObserver`实例绑定好了回调，他具体监听哪个 DOM、监听节点删除还是监听属性修改，还没有设置。而调用他的`observer`方法就可以完成这一步：
 
 ```js
-const domTarget = document.xxx;
+const domTarget = document.xxx
 observer.observe(domTarget, {
-    characterData: true // 说明监听文本内容的修改。
+  characterData: true, // 说明监听文本内容的修改。
 })
 ```
 
@@ -236,28 +235,28 @@ observer.observe(domTarget, {
 
 ---
 
-## 实现一个简易的nextTick
+## 实现一个简易的 nextTick
 
 ```js
 let callbacks = []
 let pending = false
 
-function nextTick (cb) {
-    callbacks.push(cb)
+function nextTick(cb) {
+  callbacks.push(cb)
 
-    if (!pending) {
-        pending = true
-        setTimeout(flushCallback, 0)
-    }
+  if (!pending) {
+    pending = true
+    setTimeout(flushCallback, 0)
+  }
 }
 
-function flushCallback () {
-    pending = false
-    let copies = callbacks.slice()
-    callbacks.length = 0
-    for (let i = 0; i < copies.length; i++) {
-        copies[i]();
-    }
+function flushCallback() {
+  pending = false
+  let copies = callbacks.slice()
+  callbacks.length = 0
+  for (let i = 0; i < copies.length; i++) {
+    copies[i]()
+  }
 }
 ```
 

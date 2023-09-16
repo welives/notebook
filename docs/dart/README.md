@@ -26,7 +26,7 @@
 
 [类](dart/类)
 
-[getter和setter](dart/getter和setter)
+[getter 和 setter](dart/getter和setter)
 
 [static](dart/static)
 

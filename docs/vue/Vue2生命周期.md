@@ -1,6 +1,6 @@
 ## 生命周期
 
-`Vue`实例有一个完整的生命周期，也就是从开始创建、初始化数据、编译模板、挂载Dom、渲染→更新→渲染、销毁等一系列过程，我们称这是Vue的生命周期。通俗说就是Vue实例从创建到销毁的过程，就是生命周期。
+`Vue`实例有一个完整的生命周期，也就是从开始创建、初始化数据、编译模板、挂载 Dom、渲染 → 更新 → 渲染、销毁等一系列过程，我们称这是 Vue 的生命周期。通俗说就是 Vue 实例从创建到销毁的过程，就是生命周期。
 
 每个`Vue`实例在被创建之前都要经过一系列的初始化过程。例如需要设置数据监听、编译模板、挂载实例到 DOM、在数据变化时更新 DOM 等。同时在这个过程中也会运行一些叫做生命周期钩子的函数，给予用户机会在一些特定的场景下添加他们自己的代码。
 
@@ -15,7 +15,7 @@ export function callHook(
   vm: Component,
   hook: string,
   args?: any[],
-  setContext = true
+  setContext = true,
 ) {
   pushTarget()
   const prev = currentInstance
@@ -70,7 +70,7 @@ Vue.prototype._init = function (options?: Record<string, any>) {
 export function mountComponent(
   vm: Component,
   el: Element | null | undefined,
-  hydrating?: boolean
+  hydrating?: boolean,
 ): Component {
   vm.$el = el
   // ...
@@ -105,7 +105,7 @@ export function mountComponent(
       if (vm._isMounted && !vm._isDestroyed) {
         callHook(vm, 'beforeUpdate')
       }
-    }
+    },
   }
   // ...
   new Watcher(
@@ -113,7 +113,7 @@ export function mountComponent(
     updateComponent,
     noop,
     watcherOptions,
-    true /* isRenderWatcher */
+    true /* isRenderWatcher */,
   )
   hydrating = false
 
@@ -132,11 +132,11 @@ export function mountComponent(
 }
 ```
 
-在执行`vm._render()`函数渲染`VNode`之前，执行了`beforeMount`钩子函数，在执行完`vm._update()`把`VNode`patch到真实 DOM 后，执行`mounted`钩子。
+在执行`vm._render()`函数渲染`VNode`之前，执行了`beforeMount`钩子函数，在执行完`vm._update()`把`VNode`patch 到真实 DOM 后，执行`mounted`钩子。
 
 注意，这里对`mounted`钩子函数执行有一个判断逻辑，`vm.$vnode`如果为`null`，则表明这不是一次组件的初始化过程，而是我们通过外部`new Vue`初始化过程。那么对于组件，它的`mounted`时机在哪儿呢？
 
-组件的`VNode`patch到 DOM 后，会执行`invokeInsertHook`函数，把`insertedVnodeQueue`里保存的钩子函数依次执行一遍
+组件的`VNode`patch 到 DOM 后，会执行`invokeInsertHook`函数，把`insertedVnodeQueue`里保存的钩子函数依次执行一遍
 
 ```ts
 function invokeInsertHook(vnode, queue, initial) {
@@ -181,7 +181,7 @@ const componentVNodeHooks = {
 export function mountComponent(
   vm: Component,
   el: Element | null | undefined,
-  hydrating?: boolean
+  hydrating?: boolean,
 ): Component {
   // ...
   const watcherOptions: WatcherOptions = {
@@ -189,7 +189,7 @@ export function mountComponent(
       if (vm._isMounted && !vm._isDestroyed) {
         callHook(vm, 'beforeUpdate')
       }
-    }
+    },
   }
   // ...
   new Watcher(
@@ -197,7 +197,7 @@ export function mountComponent(
     updateComponent,
     noop,
     watcherOptions,
-    true /* isRenderWatcher */
+    true /* isRenderWatcher */,
   )
   // ...
 }
@@ -235,7 +235,7 @@ function callUpdatedHooks(queue: Watcher[]) {
 export function mountComponent(
   vm: Component,
   el: Element | null | undefined,
-  hydrating?: boolean
+  hydrating?: boolean,
 ): Component {
   // ...
   // 这里是简写
@@ -247,7 +247,7 @@ export function mountComponent(
       if (vm._isMounted && !vm._isDestroyed) {
         callHook(vm, 'beforeUpdate')
       }
-    }
+    },
   }
   // ...
   new Watcher(
@@ -255,13 +255,13 @@ export function mountComponent(
     updateComponent,
     noop,
     watcherOptions,
-    true /* isRenderWatcher */
+    true /* isRenderWatcher */,
   )
   // ...
 }
 ```
 
-在`2.7.14`LTS版本中，在实例化`Watcher`的过程中，在它的构造函数里会判断`isRenderWatcher`，接着把当前`watcher`的实例赋值给`vm._watcher`，定义在`src/core/observer/watcher.ts`文件中：
+在`2.7.14`LTS 版本中，在实例化`Watcher`的过程中，在它的构造函数里会判断`isRenderWatcher`，接着把当前`watcher`的实例赋值给`vm._watcher`，定义在`src/core/observer/watcher.ts`文件中：
 
 ```ts
 export default class Watcher implements DepTarget {
@@ -271,7 +271,7 @@ export default class Watcher implements DepTarget {
     expOrFn: string | (() => any),
     cb: Function,
     options?: WatcherOptions | null,
-    isRenderWatcher?: boolean
+    isRenderWatcher?: boolean,
   ) {
     recordEffectScope(
       this,
@@ -279,7 +279,7 @@ export default class Watcher implements DepTarget {
         ? activeEffectScope
         : vm
         ? vm._scope
-        : undefined
+        : undefined,
     )
     if ((this.vm = vm) && isRenderWatcher) {
       vm._watcher = this
@@ -291,7 +291,7 @@ export default class Watcher implements DepTarget {
 // src/v3/reactivity/effectScope.ts
 export function recordEffectScope(
   effect: Watcher,
-  scope: EffectScope | undefined = activeEffectScope
+  scope: EffectScope | undefined = activeEffectScope,
 ) {
   if (scope && scope.active) {
     scope.effects.push(effect)

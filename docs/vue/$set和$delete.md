@@ -6,9 +6,9 @@
 
 ```js
 var vm = new Vue({
-  data:{
-    a:1
-  }
+  data: {
+    a: 1,
+  },
 })
 vm.b = 2 // vm.b 是非响应的
 ```
@@ -21,11 +21,11 @@ export function set<T>(object: object, key: string | number, value: T): T
 export function set(
   target: any[] | Record<string, any>,
   key: any,
-  val: any
+  val: any,
 ): any {
   if (__DEV__ && (isUndef(target) || isPrimitive(target))) {
     warn(
-      `Cannot set reactive property on undefined, null, or primitive value: ${target}`
+      `Cannot set reactive property on undefined, null, or primitive value: ${target}`,
     )
   }
   if (isReadonly(target)) {
@@ -34,8 +34,8 @@ export function set(
   }
   const ob = (target as any).__ob__
   if (isArray(target) && isValidArrayIndex(key)) {
-    target.length = Math.max(target.length, key)  // 最大值为长度
-    target.splice(key, 1, val)                    // 移除一位，异变方法派发更新
+    target.length = Math.max(target.length, key) // 最大值为长度
+    target.splice(key, 1, val) // 移除一位，异变方法派发更新
     if (ob && !ob.shallow && ob.mock) {
       observe(val, false, true)
     }
@@ -50,7 +50,7 @@ export function set(
     __DEV__ &&
       warn(
         'Avoid adding reactive properties to a Vue instance or its root $data ' +
-          'at runtime - declare it upfront in the data option.'
+          'at runtime - declare it upfront in the data option.',
       )
     return val
   }
@@ -67,16 +67,17 @@ export function set(
       target: target,
       key,
       newValue: val,
-      oldValue: undefined
+      oldValue: undefined,
     })
   } else {
-    ob.dep.notify()  // 手动触发通知
+    ob.dep.notify() // 手动触发通知
   }
   return val
 }
 ```
 
 `set`方法接收 3 个参数
+
 - `target`：可能是数组或者是普通对象
 - `key`：代表的是数组的下标或者是对象的键值
 - `val`：代表添加的值
@@ -96,7 +97,7 @@ export function defineReactive(
   val?: any,
   customSetter?: Function | null,
   shallow?: boolean,
-  mock?: boolean
+  mock?: boolean,
 ) {
   // ...
   let childOb = !shallow && observe(val, false, mock)
@@ -110,7 +111,7 @@ export function defineReactive(
           dep.depend({
             target: obj,
             type: TrackOpTypes.GET,
-            key
+            key,
           })
         } else {
           dep.depend()
@@ -196,7 +197,7 @@ const methodsToPatch = [
   'unshift',
   'splice',
   'sort',
-  'reverse'
+  'reverse',
 ]
 
 /**
@@ -224,7 +225,7 @@ methodsToPatch.forEach(function (method) {
       ob.dep.notify({
         type: TriggerOpTypes.ARRAY_MUTATION,
         target: this,
-        key: method
+        key: method,
       })
     } else {
       ob.dep.notify()
@@ -250,7 +251,7 @@ export function del(object: object, key: string | number): void
 export function del(target: any[] | object, key: any) {
   if (__DEV__ && (isUndef(target) || isPrimitive(target))) {
     warn(
-      `Cannot delete reactive property on undefined, null, or primitive value: ${target}`
+      `Cannot delete reactive property on undefined, null, or primitive value: ${target}`,
     )
   }
   if (isArray(target) && isValidArrayIndex(key)) {
@@ -262,7 +263,7 @@ export function del(target: any[] | object, key: any) {
     __DEV__ &&
       warn(
         'Avoid deleting properties on a Vue instance or its root $data ' +
-          '- just set it to null.'
+          '- just set it to null.',
       )
     return
   }
@@ -282,7 +283,7 @@ export function del(target: any[] | object, key: any) {
     ob.dep.notify({
       type: TriggerOpTypes.DELETE,
       target: target,
-      key
+      key,
     })
   } else {
     ob.dep.notify()
@@ -291,6 +292,7 @@ export function del(target: any[] | object, key: any) {
 ```
 
 `delete`方法接收 2 个参数
+
 - `target`：可能是数组或者是普通对象
 - `key`：代表的是数组的下标或者是对象的键值
 

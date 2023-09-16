@@ -10,16 +10,16 @@ export function initState(vm: Component) {
 }
 
 function initProps(vm: Component, propsOptions: Object) {
-  const propsData = vm.$options.propsData || {}         // 获取Vue实例选项上的Props
-  const props = (vm._props = shallowReactive({}))       // 获取挂载Vue实例上的_props
-  const keys: string[] = (vm.$options._propKeys = [])   // Props的Key值组成的数组
+  const propsData = vm.$options.propsData || {} // 获取Vue实例选项上的Props
+  const props = (vm._props = shallowReactive({})) // 获取挂载Vue实例上的_props
+  const keys: string[] = (vm.$options._propKeys = []) // Props的Key值组成的数组
   const isRoot = !vm.$parent
   if (!isRoot) {
-    toggleObserving(false)  // 非根实例关闭依赖监听
+    toggleObserving(false) // 非根实例关闭依赖监听
   }
   // 循环遍历 vue 实例选项中Props，并且执行响应式处理以及挂载在对应实例上
   for (const key in propsOptions) {
-    keys.push(key)  // 每遍历一次props中的值，都会收集其Key
+    keys.push(key) // 每遍历一次props中的值，都会收集其Key
     // 先校验Props中定义的数据类型是否符合，符合的话就直接返回，并且直接赋值给Vue实例上_props对象中相应的属性中
     const value = validateProp(key, propsOptions, propsData, vm)
     if (__DEV__) {
@@ -32,7 +32,7 @@ function initProps(vm: Component, propsOptions: Object) {
       proxy(vm, `_props`, key)
     }
   }
-  toggleObserving(true)   // 打开依赖监听
+  toggleObserving(true) // 打开依赖监听
 }
 ```
 
@@ -53,13 +53,13 @@ export function updateChildComponent(
   propsData: Record<string, any> | null | undefined,
   listeners: Record<string, Function | Array<Function>> | undefined,
   parentVnode: MountedComponentVNode,
-  renderChildren?: Array<VNode> | null
+  renderChildren?: Array<VNode> | null,
 ) {
   // ...
   if (propsData && vm.$options.props) {
-    toggleObserving(false)    // 关闭依赖监听
-    const props = vm._props   // 获取Vue实例上_props对象
-    const propKeys = vm.$options._propKeys || []  // 获取保留在Vue实例上的props key值
+    toggleObserving(false) // 关闭依赖监听
+    const props = vm._props // 获取Vue实例上_props对象
+    const propKeys = vm.$options._propKeys || [] // 获取保留在Vue实例上的props key值
     // 循环遍历props key
     for (let i = 0; i < propKeys.length; i++) {
       const key = propKeys[i]
@@ -67,9 +67,9 @@ export function updateChildComponent(
       // 先校验Props中定义的数据类型是否符合，符合的话就直接返回，并且直接赋值给Vue实例上_props对象中相应的属性中
       props[key] = validateProp(key, propOptions, propsData, vm)
     }
-    toggleObserving(true)   // 打开依赖监听
+    toggleObserving(true) // 打开依赖监听
     // keep a copy of raw propsData
-    vm.$options.propsData = propsData   // 新的PropsData直接取替掉选项中旧的PropsData
+    vm.$options.propsData = propsData // 新的PropsData直接取替掉选项中旧的PropsData
   }
   // ...
 }

@@ -15,7 +15,6 @@ a
 print(a); // {java, php, python, sql, dart, c++}
 ```
 
-
 ### 强类型，通过泛型约束
 
 ```dart
@@ -25,7 +24,6 @@ a
   ..add('php')
   ..add(123); // 报错
 ```
-
 
 ### 去重和转列表
 
@@ -38,7 +36,6 @@ print(list.toSet()); // {dart, java, c#, j#, e#}
 
 print(unique.toList()); // [dart, java, c#, j#, e#]
 ```
-
 
 ### 交集和联合
 

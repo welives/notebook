@@ -68,7 +68,6 @@ sayHello(s);
 showInfo(s);
 ```
 
-
 ### 普通类
 
 ```dart
