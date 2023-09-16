@@ -55,4 +55,5 @@
   - [空安全](dart/空安全)
 - [Flutter](flutter/README.md)
   - [环境搭建](flutter/环境搭建)
-
+- [杂项](misc/README.md)
+  - [VSCODE](misc/VSCODE)
