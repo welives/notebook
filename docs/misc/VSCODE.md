@@ -117,15 +117,16 @@
 - [IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode) 微软官方的智能代码提示
 - [Lorem ipsum](https://marketplace.visualstudio.com/items?itemName=Tyriar.lorem-ipsum) 快速生成假文，由于 VSCode 内置的假文功能只支持 HTML 文件，而此插件可以用于各种文件
 - [Project Manager](https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager) 项目管理器
+- [Partial Diff](https://marketplace.visualstudio.com/items?itemName=ryu1kn.partial-diff) 文本对比插件
 - [SFTP](https://marketplace.visualstudio.com/items?itemName=Natizyskunk.sftp) 在 VSCode 中使用 SFTP 上传文件到服务器
-- [TODO Highlight](https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight) TODO 高亮提示
+- [Todo Tree](https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree) TODO 高亮提示
 - [YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) .yaml 文件代码高亮提示
 - [Remote Repositories](https://marketplace.visualstudio.com/items?itemName=ms-vscode.remote-repositories) 此插件是配合`Azure Repos`和`GitHub Repositories`使用的
   - [Azure Repos](https://marketplace.visualstudio.com/items?itemName=ms-vscode.azure-repos) 在 VSCode 中快速浏览和搜索任何远程 Azure 存储库
   - [GitHub Repositories](https://marketplace.visualstudio.com/items?itemName=GitHub.remotehub) 在 VSCode 中快速浏览、搜索、编辑和提交到任何远程 GitHub 存储库
-- [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) 在 VSCode 中使用 SSH 连接服务器
-- [Remote - SSH: Editing Configuration Files](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh-edit) 在 VSCode 中通过 SSH 连接远端服务器作为开发环境
 - [Remote Explorer](https://marketplace.visualstudio.com/items?itemName=ms-vscode.remote-explorer) 远程资源管理器
+  - [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) 在 VSCode 中使用 SSH 连接服务器
+  - [Remote - SSH: Editing Configuration Files](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh-edit) 在 VSCode 中通过 SSH 连接远端服务器作为开发环境
 
 ## 我的 VSCode 用户配置
 
