@@ -19,6 +19,60 @@
 - [Python](https://www.python.org/downloads/)
 - XshellXftpPortable
 
+## 启用 Win10 的子系统功能
+
+启用 win10 的开发者模式
+
+![](./assets/wsl_setup_1.png)
+
+打开控制面板的`Windows功能`并勾选`适用于Linux的Windows子系统`，点确定后会要求重启电脑
+
+![](./assets/wsl_setup_2.png)
+
+重启好电脑后在 Win10 应用商店搜索`Ubuntu`，然后安装它
+
+![](./assets/wsl_setup_3.png)
+
+安装完成后根据提示设置系统用户名和密码
+
+键入`sudo passwd`来初始化`root`用户的密码，会提示输入当前系统用户的密码，接着才是设置`root`用户的密码，要输入两次
+
+之后如果想切到`root`用户的话就键入`su`
+
+!> 将 apt 更换为[阿里源](https://developer.aliyun.com/mirror/ubuntu)，切到`root`用户，使用顺手的编辑器修改文件`vim /etc/apt/sources.list`，将所有链接替换为`https://mirrors.aliyun.com/ubuntu/`
+
+可以使用`vim`的替换命令进行批量修改，例如：`:%s#http://cn.archive.ubuntu.com#https://mirrors.aliyun.com#g`
+
+接着输入`apt-get update`刷新源信息
+
+!> 子系统和 win10 是使用的相同网络，端口也都是共用的，避免端口占用冲突
+
+如果要在 Windows 的文件资源管理器中查看 Linux 的文件的话，只需在地址栏中输入`\\wsl$`即可打开 Linux 的文件系统
+
+---
+
+## 在子系统中安装宝塔
+
+切到`root`用户执行命令
+
+```sh
+wget -O install.sh https://download.bt.cn/install/install-ubuntu_6.0.sh && sudo bash install.sh ed8484bec
+```
+
+安装完成后会在终端输出面板的登录信息，记得保存下来，内网地址的可以替换成`127.0.0.1`也是可以打开面板的，外网地址的那个不用管，反正家庭宽带的公网 IP 也是假的
+
+!> 接下来安装运行环境的软件时一定要记得选**编译安装**
+
+创建工作区的软链接，比如我 Windows 系统中的代码是存放在是`D:/Workspace`，里面有一个前端项目`test`，那么在子系统中的软链接为
+
+```sh
+sudo ln -s /www/wwwroot/test /mnt/d/Workspace/test
+```
+
+?> 上面的`/mnt`可以理解成是`windows`系统，然后`/d`表示 D 盘，后面的文件夹就很好理解了，不再展开说明
+
+---
+
 ## WSL 端口映射
 
 在 windows10 中，由于每次重启电脑后，WSL 虚拟机的 ip 地址有可能会发生变化，所以需要重新映射
@@ -28,24 +82,6 @@ netsh interface portproxy add v4tov4 listenport=[win10端口] listenaddress=0.0.
 ```
 
 检查是否映射成功`netsh interface portproxy show all`
-
----
-
-## 宝塔面板
-
-先去下载 windows 版本的[宝塔面板](https://www.bt.cn/new/download.html)，安装到`D:\Develop\BtSoft`目录
-
-安装完成后会自动创建如下几个环境变量
-
-```sh
-BT_PANEL => D:\Develop\BtSoft\panel
-BT_PYTHON => C:\Program Files\python
-BT_SETUP => D:\Develop\BtSoft
-```
-
-接着再给用户变量`Path`增加一个值`%BT_PANEL%\script`
-
-打开宝塔面板站点，安装 MySQL，然后给用户变量`Path`再增加一个值`D:\Develop\BtSoft\mysql\MySQL5.7\bin`，这样就能在终端中使用 MySQL 命令了
 
 ---
 

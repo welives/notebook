@@ -112,6 +112,7 @@
 ## 其他
 
 - [Chinese (Simplified) (简体中文) Language Pack for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=MS-CEINTL.vscode-language-pack-zh-hans) VSCode 中文汉化包
+- [CodeGeeX: AI Code AutoComplete, Chat, Auto Comment](https://marketplace.visualstudio.com/items?itemName=aminer.codegeex) 一款国产的 AI 语言模型
 - [Dracula Official](https://marketplace.visualstudio.com/items?itemName=dracula-theme.theme-dracula) VSCode 主题插件
 - [Material Icon Theme](https://marketplace.visualstudio.com/items?itemName=PKief.material-icon-theme) 根据项目中的文件后缀名或文件夹名字自动显示图标
 - [IntelliCode](https://marketplace.visualstudio.com/items?itemName=VisualStudioExptTeam.vscodeintellicode) 微软官方的智能代码提示
