@@ -21,17 +21,25 @@
 
 ## 启用 Win10 的子系统功能
 
-启用 win10 的开发者模式
+!> 可以通过在 PowerShell 执行`wsl --install`命令进行 WSL 的初始化安装，默认会安装 Ubuntu 作为 Linux 子系统，此时会自动更新到 WSL2
+
+**下面讲讲手动设置 WSL2 的方式**
+
+1. 启用 win10 的开发者模式
 
 ![](./assets/wsl_setup_1.png)
 
-打开控制面板的`Windows功能`并勾选`适用于Linux的Windows子系统`，点确定后会要求重启电脑
+2. 打开控制面板的`Windows功能`并勾选`适用于Linux的Windows子系统`和`虚拟机平台`，点确定后会要求重启电脑
 
 ![](./assets/wsl_setup_2.png)
 
-重启好电脑后在 Win10 应用商店搜索`Ubuntu`，然后安装它
+3. 重启好电脑后在 Win10 应用商店搜索`Ubuntu`，然后安装它
 
 ![](./assets/wsl_setup_3.png)
+
+4. 下载[WSL2 Linux](https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi)内核更新包并安装
+5. 在 PowerShell 执行`wsl --set-version Ubuntu 2`命令将子系统更新到 WSL2
+6. 将 WSL2 设置为默认版本`wsl --set-default-version 2`
 
 安装完成后根据提示设置系统用户名和密码
 
@@ -70,6 +78,28 @@ sudo ln -s /www/wwwroot/test /mnt/d/Workspace/test
 ```
 
 ?> 上面的`/mnt`可以理解成是`windows`系统，然后`/d`表示 D 盘，后面的文件夹就很好理解了，不再展开说明
+
+**设置宝塔面板跟随 Windows 开机自启**
+
+1. 在 Ubuntu 中创建一个脚本`sudo vim /etc/init.wsl`，内容如下
+
+```sh
+#! /bin/bash
+bt start
+/etc/init.d/nginx start
+
+#注: 因为wsl2中的Ubuntu不能自启软件,所以才这么搞; 然后你发现宝塔自启后, nginx等服务还是不会自启, 可以把相应服务的启动指令同样放在这里来解决
+```
+
+2. 给该脚本添加执行权限`sudo chmod +x /etc/init.wsl`
+3. 在 Windows 中创建一个 vbs 脚本文件并命名为`ubuntu_start.vbs`，内容如下
+
+```vb
+Set ws = WScript.CreateObject("WScript.Shell")
+ws.run "wsl -u root /etc/init.wsl", vbhide
+```
+
+4. 按`Win+R`键打开运行，输入`shell:startup`，把`ubuntu_start.vbs`拖到启动文件夹里，这样每次 Windows 启动时就会自动执行`init.wsl`脚本了
 
 ---
 
