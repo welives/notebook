@@ -29,7 +29,13 @@
 
 ![](./assets/wsl_setup_1.png)
 
-2. 打开控制面板的`Windows功能`并勾选`适用于Linux的Windows子系统`和`虚拟机平台`，点确定后会要求重启电脑
+2. 打开控制面板的`Windows功能`，勾选
+   - `Hyper-V`
+   - `Windows 虚拟机监控程序平台`
+   - `适用于 Linux 的 Windows 子系统`
+   - `虚拟机平台`
+
+只是简单玩玩 WSL 的话，勾选`适用于 Linux 的 Windows 子系统`就够了，但我这里会后续可能会涉及到`Kali`和`Docker`，所以干脆一次直接安装完。_安装完成后会提示重启一次电脑_
 
 ![](./assets/wsl_setup_2.png)
 
@@ -57,7 +63,7 @@
 
 #### WSL 端口映射
 
-在 windows10 中，由于每次重启宿主机后，WSL 虚拟机的 ip 地址有可能会发生变化，所以需要重新映射，在 PowerShell 中执行
+由于每次重启宿主机后，WSL 的 ip 地址都会发生变化(_稍后讲 WSL 设置静态 IP 的方法_)，所以需要重新映射，在 PowerShell 中执行
 
 ```sh
 netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=win10端口 connectaddress=虚拟机的ip connectport=虚拟机的端口
@@ -66,6 +72,32 @@ netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=win10端�
 检查是否映射成功`netsh interface portproxy show all`
 
 在 Ubuntu 中查看 ip 地址的命令是`ifconfig`，其中`eth0`中的`inet`就是虚拟机的 ip 地址
+
+#### WSL 设置静态 IP
+
+比如，我要给 WSL 设置的静态 IP 为`192.168.50.2`，其网关地址为`192.168.50.1`，则在 WSL 中执行`vim /etc/init.d/ip-setup.sh`创建一个脚本，其内容如下
+
+```sh
+#! /bin/sh
+
+sudo ip addr del $(ip addr show eth0 | grep 'inet\b' | awk '{print $2}' | head -n 1) dev eth0
+sudo ip addr add 192.168.50.2/24 broadcast 192.168.50.255 dev eth0
+sudo ip route add 0.0.0.0/0 via 192.168.50.1 dev eth0
+sudo echo "nameserver 192.168.50.1" > /etc/resolv.conf
+```
+
+给该脚本添加执行权限`sudo chmod +x /etc/init.d/ip-setup.sh`
+
+接着回到宿主机，`Win+R`打开运行，输入`shell:startup`，在启动文件夹中新建脚本文件`ubuntu_start.bat`，其内容如下
+
+```sh
+%1 mshta vbscript:CreateObject("Shell.Application").ShellExecute("cmd.exe","/c %~s0 ::","","runas",1)(window.close)&&exit cd /d "%~dp0"%1 mshta vbscript:CreateObject("Shell.Application").ShellExecute("cmd.exe","/c %~s0 ::","","runas",1)(window.close)&&exit cd /d "%~dp0"
+wsl -u root /etc/init.d/ip-setup.sh
+powershell -c "Get-NetAdapter 'vEthernet (WSL)' | Get-NetIPAddress | Remove-NetIPAddress -Confirm:$False; New-NetIPAddress -IPAddress 192.168.50.1 -PrefixLength 24 -InterfaceAlias 'vEthernet (WSL)'; Get-NetNat | ? Name -Eq WSLNat | Remove-NetNat -Confirm:$False; New-NetNat -Name WSLNat -InternalIPInterfaceAddressPrefix 192.168.50.0/24;"
+wsl -u root /etc/init.d/wsl-init.sh
+```
+
+!> 第一行的作用是给该脚本获取管理员权限并执行自身，因为其中调用 PowerShell 的部分需要管理员权限。最后一行`wsl -u root /etc/init.d/wsl-init.sh`是额外的启动配置，后面会讲
 
 #### SSH 配置
 
@@ -89,10 +121,10 @@ PasswordAuthentication yes
 
 修改完毕后重启 ssh 服务`service ssh --full-restart`
 
-上面提到，每次重启宿主机会导致 WSL 的 ip 地址变化，所以这里要做一下映射，回到宿主机执行端口映射(_根据自己的情况填写虚拟机的 ip 地址_)
+在上面，我已经将 WSL 的 IP 地址修改成`192.168.50.2`(_根据自己的情况填写虚拟机的 ip 地址_)，所以这里要做一下端口映射，回到宿主机执行
 
 ```sh
-netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=2233 connectaddress=172.18.242.131 connectport=2233
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=2233 connectaddress=192.168.50.2 connectport=2233
 ```
 
 如果遇到端口被防火墙拦截的情况，需在宿主机的 PowerShell 中执行
@@ -101,7 +133,7 @@ netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=2233 conne
 netsh advfirewall firewall add rule name=WSL2 dir=in action=allow protocol=TCP localport=2233
 ```
 
-!> 如果在使用`Xshell`连接时提示`找不到匹配的key exchange算法`或`找不到匹配的host key算法`，更新`Xshell`到一个比较新的版本就好了，因为服务端的`openssh-server`加密算法太新了
+!> 如果在使用`Xshell`连接时提示`找不到匹配的key exchange算法`或`找不到匹配的host key算法`，更新`Xshell`到一个比较新的版本就好了，因为服务端的`openssh-server`加密算法更新了
 
 #### WSL 设置代理
 
@@ -121,7 +153,7 @@ export http_proxy="http://192.168.5.10:7890"
 export https_proxy="http://192.168.5.10:7890"
 ```
 
-3. 修改`/etc/profile`文件，这种方式对所有用户永久生效。在终端输入`vim /etc/profile`，接着在文件末尾添加以下两行后保存退出，最后需要通过`reboot`重启系统来使配置生效
+1. 修改`/etc/profile`文件，这种方式对所有用户永久生效。在终端输入`vim /etc/profile`，接着在文件末尾添加以下两行后保存退出，最后在终端输入`source /etc/profile`重载配置且重启 WSL 才能使配置生效
 
 ```sh
 export http_proxy="http://192.168.5.10:7890"
@@ -148,29 +180,25 @@ wget -O install.sh https://download.bt.cn/install/install-ubuntu_6.0.sh && sudo 
 sudo ln -s /www/wwwroot/test /mnt/d/Workspace/test
 ```
 
-?> 上面的`/mnt`可以理解成是`windows`系统，然后`/d`表示 D 盘，后面的文件夹就很好理解了，不再展开说明
+?> 上面的`/mnt`可以理解成是`Windows`系统，然后`/d`表示 D 盘，后面的文件夹就很好理解了，不再展开说明
 
 #### 设置宝塔面板跟随 Windows 开机自启
 
-1. 在 Ubuntu 中创建一个脚本`sudo vim /etc/init.wsl`，内容如下
+1. 在 Ubuntu 中创建一个脚本`sudo vim /etc/init.d/wsl-init.sh`，内容如下
 
 ```sh
-#! /bin/bash
-bt start
+#! /bin/sh
+
+service ssh start
 /etc/init.d/nginx start
-
-#注: 因为wsl2中的Ubuntu不能自启软件,所以才这么搞; 然后你发现宝塔自启后, nginx等服务还是不会自启, 可以把相应服务的启动指令同样放在这里来解决
+/etc/init.d/mysqld start
+bt start
 ```
 
-2. 给该脚本添加执行权限`sudo chmod +x /etc/init.wsl`
-3. 在 Windows 中创建一个 vbs 脚本文件并命名为`ubuntu_start.vbs`，内容如下
+!> 因为 WSL2 中的 Ubuntu 不能自启软件，所以才这么搞; 然后你会发现宝塔自启后，nginx、mysqld 等服务还是不会自启，可以把相应服务的启动指令同样放在这里来解决
 
-```vb
-Set ws = WScript.CreateObject("WScript.Shell")
-ws.run "wsl -u root /etc/init.wsl", vbhide
-```
-
-4. 按`Win+R`键打开运行，输入`shell:startup`，把`ubuntu_start.vbs`拖到启动文件夹里，这样每次 Windows 启动时就会自动执行`init.wsl`脚本了
+2. 给该脚本添加执行权限`sudo chmod +x /etc/init.d/wsl-init.sh`
+3. 将该脚本添加到上面的`ubuntu_start.bat`开机脚本中，这样每次 Windows 启动时就会自动执行`wsl-init.sh`脚本了
 
 ---
 
