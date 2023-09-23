@@ -21,7 +21,7 @@
 
 ## 启用 Win10 的子系统功能
 
-!> 可以通过在 PowerShell 执行`wsl --install`命令进行 WSL 的初始化安装，默认会安装 Ubuntu 作为 Linux 子系统，此时会自动更新到 WSL2
+!> 可以通过在 PowerShell 执行`wsl --install`命令进行 WSL 的初始化安装，默认会安装 Ubuntu 作为 Linux 子系统，此时会自动更新到 WSL2。输入`wsl -l -o`可以查看官方提供的 Linux 发行版列表
 
 **下面讲讲手动设置 WSL2 的方式**
 
@@ -33,21 +33,19 @@
 
 ![](./assets/wsl_setup_2.png)
 
-3. 重启好电脑后在 Win10 应用商店搜索`Ubuntu`，然后安装它
+3. 下载[WSL2 Linux](https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi)内核更新包并安装
+4. 将 WSL2 设置为默认版本`wsl --set-default-version 2`
+5. 在 Win10 应用商店搜索`Ubuntu`，然后安装它，也可以通过命令`wsl --install -d Ubuntu`来安装
 
 ![](./assets/wsl_setup_3.png)
 
-4. 下载[WSL2 Linux](https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi)内核更新包并安装
-5. 在 PowerShell 执行`wsl --set-version Ubuntu 2`命令将子系统更新到 WSL2
-6. 将 WSL2 设置为默认版本`wsl --set-default-version 2`
+?> 如果之前已经安装了 WSL1 版本的子系统，那么在上述第 4 步之后再执行`wsl --set-version Ubuntu 2`命令将子系统更新到 WSL2
 
-安装完成后根据提示设置系统用户名和密码
+安装完成后根据提示设置系统用户名和密码，输入`sudo passwd`来初始化`root`用户的密码，会提示输入当前系统用户的密码，接着才是设置`root`用户的密码，要输入两次。之后如果想切到`root`用户的话就键入`su`
 
-键入`sudo passwd`来初始化`root`用户的密码，会提示输入当前系统用户的密码，接着才是设置`root`用户的密码，要输入两次
+#### 将 apt 更换为[阿里源](https://developer.aliyun.com/mirror/ubuntu)
 
-之后如果想切到`root`用户的话就键入`su`
-
-!> 将 apt 更换为[阿里源](https://developer.aliyun.com/mirror/ubuntu)，切到`root`用户，使用顺手的编辑器修改文件`vim /etc/apt/sources.list`，将所有链接替换为`https://mirrors.aliyun.com/ubuntu/`
+切到`root`用户，使用顺手的编辑器修改文件`vim /etc/apt/sources.list`，将所有链接替换为`https://mirrors.aliyun.com/ubuntu/`
 
 可以使用`vim`的替换命令进行批量修改，例如：`:%s#http://cn.archive.ubuntu.com#https://mirrors.aliyun.com#g`
 
@@ -56,6 +54,79 @@
 !> 子系统和 win10 是使用的相同网络，端口也都是共用的，避免端口占用冲突
 
 如果要在 Windows 的文件资源管理器中查看 Linux 的文件的话，只需在地址栏中输入`\\wsl$`即可打开 Linux 的文件系统
+
+#### WSL 端口映射
+
+在 windows10 中，由于每次重启宿主机后，WSL 虚拟机的 ip 地址有可能会发生变化，所以需要重新映射，在 PowerShell 中执行
+
+```sh
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=win10端口 connectaddress=虚拟机的ip connectport=虚拟机的端口
+```
+
+检查是否映射成功`netsh interface portproxy show all`
+
+在 Ubuntu 中查看 ip 地址的命令是`ifconfig`，其中`eth0`中的`inet`就是虚拟机的 ip 地址
+
+#### SSH 配置
+
+在新安装的 Ubuntu 中把`openssh-server`给卸载了，因为它预装的可能不完整，需要重新安装一下，切到`root`用户
+
+```sh
+apt remove openssh-server
+apt install openssh-server
+```
+
+接着来修改 ssh 的配置，在终端输入`vim /etc/ssh/sshd_config`，修改或增加以下几个配置项(_根据自己的喜好设置端口_)
+
+```sh
+Port 2233
+ListenAddress 0.0.0.0
+LoginGraceTime 2m
+StrictModes yes
+PermitRootLogin yes
+PasswordAuthentication yes
+```
+
+修改完毕后重启 ssh 服务`service ssh --full-restart`
+
+上面提到，每次重启宿主机会导致 WSL 的 ip 地址变化，所以这里要做一下映射，回到宿主机执行端口映射(_根据自己的情况填写虚拟机的 ip 地址_)
+
+```sh
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=2233 connectaddress=172.18.242.131 connectport=2233
+```
+
+如果遇到端口被防火墙拦截的情况，需在宿主机的 PowerShell 中执行
+
+```sh
+netsh advfirewall firewall add rule name=WSL2 dir=in action=allow protocol=TCP localport=2233
+```
+
+!> 如果在使用`Xshell`连接时提示`找不到匹配的key exchange算法`或`找不到匹配的host key算法`，更新`Xshell`到一个比较新的版本就好了，因为服务端的`openssh-server`加密算法太新了
+
+#### WSL 设置代理
+
+1. 临时设置代理，这种方式设置的代理仅在当前终端生效，关闭当前终端后就会恢复之前的环境变量。这里，因为我的宿主机 Windows 用的是 Clash，宿主 IP 地址为`192.168.5.10`，端口为`7890`，所以在终端输入
+
+```sh
+export http_proxy="http://192.168.5.10:7890"
+export https_proxy="http://192.168.5.10:7890"
+```
+
+!> Clash 要记得打开`Allow LAN`模式，因为 Ubuntu 和宿主机之间其实是属于局域网
+
+2. 修改`.bashrc`文件，这种方式对当前用户永久生效。先在终端输入`cd ~`回到用户根目录，接着输入`vim .bashrc`，然后在文件末尾添加以下两行后保存退出，最后在终端输入`source .bashrc`重载配置使其生效
+
+```sh
+export http_proxy="http://192.168.5.10:7890"
+export https_proxy="http://192.168.5.10:7890"
+```
+
+3. 修改`/etc/profile`文件，这种方式对所有用户永久生效。在终端输入`vim /etc/profile`，接着在文件末尾添加以下两行后保存退出，最后需要通过`reboot`重启系统来使配置生效
+
+```sh
+export http_proxy="http://192.168.5.10:7890"
+export https_proxy="http://192.168.5.10:7890"
+```
 
 ---
 
@@ -79,7 +150,7 @@ sudo ln -s /www/wwwroot/test /mnt/d/Workspace/test
 
 ?> 上面的`/mnt`可以理解成是`windows`系统，然后`/d`表示 D 盘，后面的文件夹就很好理解了，不再展开说明
 
-**设置宝塔面板跟随 Windows 开机自启**
+#### 设置宝塔面板跟随 Windows 开机自启
 
 1. 在 Ubuntu 中创建一个脚本`sudo vim /etc/init.wsl`，内容如下
 
@@ -100,18 +171,6 @@ ws.run "wsl -u root /etc/init.wsl", vbhide
 ```
 
 4. 按`Win+R`键打开运行，输入`shell:startup`，把`ubuntu_start.vbs`拖到启动文件夹里，这样每次 Windows 启动时就会自动执行`init.wsl`脚本了
-
----
-
-## WSL 端口映射
-
-在 windows10 中，由于每次重启电脑后，WSL 虚拟机的 ip 地址有可能会发生变化，所以需要重新映射
-
-```sh
-netsh interface portproxy add v4tov4 listenport=[win10端口] listenaddress=0.0.0.0 connectport=[虚拟机的端口] connectaddress=[虚拟机的ip]
-```
-
-检查是否映射成功`netsh interface portproxy show all`
 
 ---
 
@@ -147,6 +206,14 @@ git config credential.helper store
 ---
 
 ## nvm 和 nodejs 的配置
+
+#### Ubuntu 中安装 [nvm](https://github.com/nvm-sh/nvm)
+
+1. 命令行中执行`curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash`，脚本运行结束后打开一个新的终端窗口，输入`nvm -v`查看是否安装成功
+2. 查看所有可用的 node 版本`nvm ls-remote`
+3. 安装 LTS 版本的 node，`nvm install --lts`，安装后会自动切到这个版本
+
+#### Windows 中安装 nvm
 
 先去 Github 下载[nvm](https://github.com/coreybutler/nvm-windows)
 
