@@ -1,11 +1,12 @@
 # 我的 Win10 开发环境搭建
 
-!> 在 Windows 系统中，我平时习惯将开发软件安装在`D`盘的`Develop`目录下
+!> 在 Windows 系统中，我平时习惯将开发软件安装在`D:\Develop`目录下
 
 ## 可能用到的软件
 
 - [Android Studio](https://developer.android.com/studio)
 - [宝塔面板](https://www.bt.cn/new/download.html)
+- [Clash](https://github.com/Fndroid/clash_for_windows_pkg)
 - [Dart](http://gekorm.com/dart-windows/)
 - fvm
 - [git](https://git-scm.com/downloads)
@@ -20,6 +21,32 @@
 - XshellXftpPortable
 - [Docker](https://www.docker.com/products/docker-desktop/)
 - Windows Terminal
+
+## 魔法
+
+这年头当个程序员不会点魔法都没法干活了，我自己用的是`Clash`，Chrome 浏览器插件配合使用的是`Proxy SwitchyOmega`
+
+至于是哪里的魔法学院我就不细说了，我只讲这两个软件如何搭配使用
+
+1. 新建一个情景模式，名字取个自己喜欢的
+
+![](./assets/magic_setup_1.png)
+
+2. 协议选`HTTP`，服务器填`127.0.0.1`，端口`7890`(_因为用的是 Clash_)，然后保存
+
+![](./assets/magic_setup_2.png)
+
+3. 切到自动切换(auto switch)模式，在`2`的位置填入`raw.githubusercontent.com`，模式选刚才创建的，我这里创建的是`Clash`；`3`的位置选刚才创建的模式，`4`的位置填入规则列表的[链接](https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt)，接着点击`5`，最后保存
+
+![](./assets/magic_setup_3.png)
+
+4. 然后`Proxy SwitchyOmega`选择使用自动切换模式
+
+![](./assets/magic_setup_4.png)
+
+5. 最后 PC 端的 Clash 代理模式选择`Global`(全局)就行了，对于访问网站来说开不开系统代理都无所谓，如果是给 PC 软件使用的话，打开一下系统代理就行
+
+![](./assets/magic_setup_5.png)
 
 ## 启用 Windows 的 WSL 功能
 
@@ -260,7 +287,18 @@ rm -rf get-docker.sh
 
 ![](./assets/docker_setup_2.png ':size=80%')
 
-更改镜像仓库地址，我这里使用的是阿里源
+由于众所周知的原因，Docker 官方源 ban 掉国内 ip 了，所以需要更改为国内镜像源
+
+```json
+{
+  "registry-mirrors": [
+    "https://docker.m.daocloud.io",
+    "https://dockerproxy.com",
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://docker.nju.edu.cn"
+  ]
+}
+```
 
 ![](./assets/docker_setup_3.png ':size=80%')
 
