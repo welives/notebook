@@ -18,8 +18,10 @@
 - Navicat Premium
 - [Python](https://www.python.org/downloads/)
 - XshellXftpPortable
+- [Docker](https://www.docker.com/products/docker-desktop/)
+- Windows Terminal
 
-## 启用 Win10 的子系统功能
+## 启用 Windows 的 WSL 功能
 
 !> 可以通过在 PowerShell 执行`wsl --install`命令进行 WSL 的初始化安装，默认会安装 Ubuntu 作为 Linux 子系统，此时会自动更新到 WSL2。输入`wsl -l -o`可以查看官方提供的 Linux 发行版列表
 
@@ -49,6 +51,10 @@
 
 安装完成后根据提示设置系统用户名和密码，输入`sudo passwd`来初始化`root`用户的密码，会提示输入当前系统用户的密码，接着才是设置`root`用户的密码，要输入两次。之后如果想切到`root`用户的话就键入`su`
 
+#### 安装 Windows Terminal
+
+在微软应用商店搜索`Windows Terminal`，然后安装它，用它来配合 WSL 的使用体验我个人是觉得很爽的
+
 #### 将 apt 更换为[阿里源](https://developer.aliyun.com/mirror/ubuntu)
 
 切到`root`用户，使用顺手的编辑器修改文件`vim /etc/apt/sources.list`，将所有链接替换为`https://mirrors.aliyun.com/ubuntu/`
@@ -75,29 +81,41 @@ netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=win10端�
 
 #### WSL 设置静态 IP
 
-比如，我要给 WSL 设置的静态 IP 为`192.168.50.2`，其网关地址为`192.168.50.1`，则在 WSL 中执行`vim /etc/init.d/ip-setup.sh`创建一个脚本，其内容如下
+比如，我要给 WSL 设置的静态 IP 为`172.20.19.2`，其网关地址为`172.20.19.1`
+
+那么在 WSL 中执行`vim /etc/init.d/ip-setup.sh`创建一个脚本，并该脚本添加执行权限`sudo chmod +x /etc/init.d/ip-setup.sh`，其内容如下
 
 ```sh
 #! /bin/sh
 
 sudo ip addr del $(ip addr show eth0 | grep 'inet\b' | awk '{print $2}' | head -n 1) dev eth0
-sudo ip addr add 192.168.50.2/24 broadcast 192.168.50.255 dev eth0
-sudo ip route add 0.0.0.0/0 via 192.168.50.1 dev eth0
-sudo echo "nameserver 192.168.50.1" > /etc/resolv.conf
+sudo ip addr add 172.20.19.2/24 broadcast 172.20.19.255 dev eth0
+sudo ip route add 0.0.0.0/0 via 172.20.19.1 dev eth0
+sudo echo "nameserver 172.20.19.1" > /etc/resolv.conf
 ```
 
-给该脚本添加执行权限`sudo chmod +x /etc/init.d/ip-setup.sh`
+上述命令首先删除掉 WSL 已经配置的 IP 地址，然后为其分配`172.20.19.2/24`，最后配置路由并指定 DNS`172.20.19.1`
 
-接着回到宿主机，`Win+R`打开运行，输入`shell:startup`，在启动文件夹中新建脚本文件`ubuntu_start.bat`，其内容如下
+这样配置后 WSL 暂时没能联网，还需要到宿主机执行命令修改虚拟网络适配器
+
+```sh
+Get-NetAdapter 'vEthernet (WSL)' | Get-NetIPAddress | Remove-NetIPAddress -Confirm:$False; New-NetIPAddress -IPAddress 172.20.19.1 -PrefixLength 24 -InterfaceAlias 'vEthernet (WSL)'; Get-NetNat | ? Name -Eq WSLNat | Remove-NetNat -Confirm:$False; New-NetNat -Name WSLNat -InternalIPInterfaceAddressPrefix 172.20.19.0/24;
+```
+
+上述命令中，首先找到 vEthernet (WSL) 这个网络适配器，然后将其所有已有的 IP 地址删除，然后为其添加`172.20.19.1/24`的 IP 地址。接着是设置 NAT：首先删除名字叫做 WSLNat 的 NAT（因为我们后续创建的 NAT 名字叫做 WSLNat，这些命令每次启动系统后都需要执行，因此可能系统中已经存在名为 WSLNat 的 NAT 了，为了防止冲突，如果存在的话就先删掉），然后创建一个名字叫做 WSLNat 的 NAT，设置内部地址为`172.20.19.0/24`
+
+最后需要将上述两部分指令合并到一个脚本中一起执行
+
+回到宿主机，`Win+R`打开运行，输入`shell:startup`，在启动文件夹中新建脚本`ubuntu_start.bat`，其内容如下
 
 ```sh
 %1 mshta vbscript:CreateObject("Shell.Application").ShellExecute("cmd.exe","/c %~s0 ::","","runas",1)(window.close)&&exit cd /d "%~dp0"%1 mshta vbscript:CreateObject("Shell.Application").ShellExecute("cmd.exe","/c %~s0 ::","","runas",1)(window.close)&&exit cd /d "%~dp0"
 wsl -u root /etc/init.d/ip-setup.sh
-powershell -c "Get-NetAdapter 'vEthernet (WSL)' | Get-NetIPAddress | Remove-NetIPAddress -Confirm:$False; New-NetIPAddress -IPAddress 192.168.50.1 -PrefixLength 24 -InterfaceAlias 'vEthernet (WSL)'; Get-NetNat | ? Name -Eq WSLNat | Remove-NetNat -Confirm:$False; New-NetNat -Name WSLNat -InternalIPInterfaceAddressPrefix 192.168.50.0/24;"
+powershell -c "Get-NetAdapter 'vEthernet (WSL)' | Get-NetIPAddress | Remove-NetIPAddress -Confirm:$False; New-NetIPAddress -IPAddress 172.20.19.1 -PrefixLength 24 -InterfaceAlias 'vEthernet (WSL)'; Get-NetNat | ? Name -Eq WSLNat | Remove-NetNat -Confirm:$False; New-NetNat -Name WSLNat -InternalIPInterfaceAddressPrefix 172.20.19.0/24;"
 wsl -u root /etc/init.d/wsl-init.sh
 ```
 
-!> 第一行的作用是给该脚本获取管理员权限并执行自身，因为其中调用 PowerShell 的部分需要管理员权限。最后一行`wsl -u root /etc/init.d/wsl-init.sh`是额外的启动配置，后面会讲
+!> 第一行的作用是让该脚本获取管理员权限并执行自身，因为其中调用 PowerShell 的部分需要管理员权限。最后一行`wsl -u root /etc/init.d/wsl-init.sh`是额外的启动配置，后面会讲
 
 #### SSH 配置
 
@@ -121,10 +139,10 @@ PasswordAuthentication yes
 
 修改完毕后重启 ssh 服务`service ssh --full-restart`
 
-在上面，我已经将 WSL 的 IP 地址修改成`192.168.50.2`(_根据自己的情况填写虚拟机的 ip 地址_)，所以这里要做一下端口映射，回到宿主机执行
+在上面，我已经将 WSL 的 IP 地址修改成`172.20.19.2`(_根据自己的情况填写 WSL 的 ip 地址_)，所以这里要做一下端口映射，回到宿主机执行
 
 ```sh
-netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=2233 connectaddress=192.168.50.2 connectport=2233
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=2233 connectaddress=172.20.19.2 connectport=2233
 ```
 
 如果遇到端口被防火墙拦截的情况，需在宿主机的 PowerShell 中执行
@@ -160,9 +178,101 @@ export http_proxy="http://192.168.5.10:7890"
 export https_proxy="http://192.168.5.10:7890"
 ```
 
+#### 文件系统
+
+需要注意的是我们现在有了两套系统，两者的文件类型并不一致，跨系统访问和传输文件的话效率会下降很多，最好各存各的，以用户目录为例
+
+- 如果在 Windows 上开发，就将文件放在：`C:\Users\<UserName>\`，也可以放在其他盘符的某个文件夹下统一管理，像我就是`D:\Workspace`
+- 如果在 Ubuntu 上开发，就将文件放在：`\\wsl$\ubuntu\home\<UserName>\`
+
 ---
 
-## 在子系统中安装宝塔
+## WSL 迁出系统盘
+
+由于 WSL 是作为一个 WindowsApp 默认安装在系统盘中的，而系统盘的可用空间会随着使用时间的推移而逐渐变少，所以需要将 WSL 迁出到其他盘，比如我这里将 WSL 迁到了`D`盘
+
+?> 变少的快慢因人而异，像我有强迫症，对文件管理有很高的要求，120G 的系统盘用了两年多还剩 40G 左右的空间
+
+**WSL 的迁移大致分为六步**
+
+1. 查看自己的 WSL 和 Linux 发行版本，可以看到我这里的发行版本是`Ubuntu`，后续的操作都将围绕这个发行版本来进行
+
+![](./assets/wsl_migrate_1.png)
+
+2. 关闭 WSL 服务`wsl --shutdown`
+3. 将原位置的 Linux 发行版导出到指定位置，最好要在管理员模式的 PowerShell 执行`wsl --export Ubuntu D:\WSL\Ubuntu.tar`
+4. 在导出位置确定有`Ubuntu.tar`备份文件生成之后，执行注销原 WSL 命令`wsl --unregister Ubuntu`
+5. 在新的位置导入 Linux 发行版，最好要在管理员模式的 PowerShell 执行`wsl --import Ubuntu D:\WSL\Ubuntu D:\WSL\Ubuntu.tar`
+6. 修改用户名为原来的名字，执行`Ubuntu config --default-user jandan`
+
+迁移完成后把之前生成的备份文件`Ubuntu.tar`删除
+
+---
+
+## 安装 Docker
+
+在 Windows 中使用 Docker 有以下两种方式
+
+#### 直接在 WSL2 里面安装
+
+在用户目录下输入`vim install-docker.sh`，编写一个脚本用来把 docker 的下载和安装过程整合在一起，其内容如下
+
+```sh
+#!/bin/sh
+curl -fsSL get.docker.com -o get-docker.sh
+sh get-docker.sh
+if [ !$(getent group docker) ];
+then
+    sudo groupadd docker
+else
+    echo "docker user group already exists"
+fi
+
+sudo gpasswd -a $USER docker
+sudo service docker restart
+
+rm -rf get-docker.sh
+```
+
+然后执行`sh install-docker.sh`等待 docker 的安装
+
+安装完成后执行`docker version`来检查是否成功，如果发现 Server 没启动的话则执行`sudo service docker start`
+
+默认情况下，docker server 是不跟随 WSL 的启动而启动的，所以需要手动将其加入自启服务，执行`sudo systemctl enable docker`即可
+
+#### 在 Windows 上安装 Docker Desktop
+
+先去下载[Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+由于`Docker Desktop`的安装程序不提供设置安装路径的功能，而且默认是安装到`C:\Program Files\Docker`目录下的，这就很占系统盘的宝贵空间
+
+为了解决这个问题，需要对其默认安装路径做一个软链接处理，先在目标位置创建`Docker`文件夹，然后管理员模式打开 CMD 执行`mklink /j "C:\Program Files\Docker" "D:\Develop\Docker"`
+
+软链接做好后再开始安装，记得勾选使用 WSL2 代替 Hyper-V
+
+![](./assets/docker_setup_0.png)
+
+安装完成后进入软件，打开设置界面，修改 docker 数据和镜像的存储路径
+
+![](./assets/docker_setup_1.png ':size=80%')
+
+将 Ubuntu 和 docker 关联起来
+
+![](./assets/docker_setup_2.png ':size=80%')
+
+更改镜像仓库地址，我这里使用的是阿里源
+
+![](./assets/docker_setup_3.png ':size=80%')
+
+设置完成后打开 WSL，输入`docker ps`，看到如下的输出就表示 Docker 和 WSL 连接成功了
+
+![](./assets/docker_setup_4.png)
+
+---
+
+## 在 WSL 中安装宝塔
+
+上面讲了 Docker 的安装之后，其实宝塔有没有都无所谓了，但它在我还不会玩 Docker 的那段时间还是帮了我不少，所以姑且还是讲讲吧
 
 切到`root`用户执行命令
 
