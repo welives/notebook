@@ -226,6 +226,14 @@ export https_proxy="http://192.168.5.10:7890"
 - 如果在 Windows 上开发，就将文件放在：`C:\Users\<UserName>\`，也可以放在其他盘符的某个文件夹下统一管理，像我就是`D:\Workspace`
 - 如果在 Ubuntu 上开发，就将文件放在：`\\wsl$\ubuntu\home\<UserName>\`
 
+创建工作区的软链接，比如我 Windows 系统中的代码是存放在是`D:/Workspace`，里面有一个前端项目`test`，那么在子系统中的软链接为
+
+```sh
+sudo ln -s /home/code/test /mnt/d/Workspace/test
+```
+
+?> 上面的`/mnt`可以理解成是`Windows`系统，然后`/d`表示 D 盘，后面的文件夹就很好理解了，不再展开说明
+
 ---
 
 ## WSL 迁出系统盘
@@ -256,6 +264,8 @@ export https_proxy="http://192.168.5.10:7890"
 
 #### 直接在 WSL2 里面安装
 
+这种安装方式要求对 docker 非常熟练，因为所有操作全都是执行命令，`docker-compose`需要单独安装
+
 在用户目录下输入`vim install-docker.sh`，编写一个脚本用来把 docker 的下载和安装过程整合在一起，其内容如下
 
 ```sh
@@ -282,6 +292,8 @@ rm -rf get-docker.sh
 默认情况下，docker server 是不跟随 WSL 的启动而启动的，所以需要手动将其加入自启服务，执行`sudo systemctl enable docker`即可
 
 #### 在 Windows 上安装 Docker Desktop
+
+这种安装方式使用起来适合 docker 新手，因为有 GUI，而且软件内置有`docker-compose`
 
 先去下载[Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
@@ -324,7 +336,7 @@ rm -rf get-docker.sh
 
 ## 在 WSL 中安装宝塔
 
-上面讲了 Docker 的安装之后，其实宝塔有没有都无所谓了，但它在我还不会玩 Docker 的那段时间还是帮了我不少，所以姑且还是讲讲吧
+上面讲了 Docker 的安装之后，其实宝塔有没有都无所谓了，但它在我还不会玩 Docker 的那段时间还是帮了我不少，姑且还是讲讲吧
 
 切到`root`用户执行命令
 
@@ -335,14 +347,6 @@ wget -O install.sh https://download.bt.cn/install/install-ubuntu_6.0.sh && sudo 
 安装完成后会在终端输出面板的登录信息，记得保存下来，内网地址的可以替换成`127.0.0.1`也是可以打开面板的，外网地址的那个不用管，反正家庭宽带的公网 IP 也是假的
 
 !> 接下来安装运行环境的软件时一定要记得选**编译安装**
-
-创建工作区的软链接，比如我 Windows 系统中的代码是存放在是`D:/Workspace`，里面有一个前端项目`test`，那么在子系统中的软链接为
-
-```sh
-sudo ln -s /www/wwwroot/test /mnt/d/Workspace/test
-```
-
-?> 上面的`/mnt`可以理解成是`Windows`系统，然后`/d`表示 D 盘，后面的文件夹就很好理解了，不再展开说明
 
 #### 设置宝塔面板跟随 Windows 开机自启
 
