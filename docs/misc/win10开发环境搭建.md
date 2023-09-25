@@ -110,18 +110,26 @@ netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=win10端�
 
 比如，我要给 WSL 设置的静态 IP 为`172.20.19.2`，其网关地址为`172.20.19.1`
 
-那么在 WSL 中执行`vim /etc/init.d/ip-setup.sh`创建一个脚本，并该脚本添加执行权限`sudo chmod +x /etc/init.d/ip-setup.sh`，其内容如下
+首先将 WSL 自动生成`resolv.conf`的机制关闭，执行`sudo vim /etc/wsl.conf`，添加如下内容
 
 ```sh
-#! /bin/sh
+[network]
+generateResolvConf = false
+```
+
+接着执行`sudo vim /etc/init.d/ip-setup.sh`创建一个脚本，并该脚本添加执行权限`sudo chmod +x /etc/init.d/ip-setup.sh`，其内容如下
+
+```sh
+#!/bin/sh
 
 sudo ip addr del $(ip addr show eth0 | grep 'inet\b' | awk '{print $2}' | head -n 1) dev eth0
 sudo ip addr add 172.20.19.2/24 broadcast 172.20.19.255 dev eth0
 sudo ip route add 0.0.0.0/0 via 172.20.19.1 dev eth0
-sudo echo "nameserver 172.20.19.1" > /etc/resolv.conf
+sudo rm -f /etc/resolv.conf
+sudo echo nameserver 8.8.8.8 > /etc/resolv.conf
 ```
 
-上述命令首先删除掉 WSL 已经配置的 IP 地址，然后为其分配`172.20.19.2/24`，最后配置路由并指定 DNS`172.20.19.1`
+上述命令先删除掉 WSL 已经配置的 IP 地址，然后为其分配`172.20.19.2/24`，最后配置路由并指定 DNS 服务器为`8.8.8.8`
 
 这样配置后 WSL 暂时没能联网，还需要到宿主机执行命令修改虚拟网络适配器
 
@@ -143,6 +151,12 @@ wsl -u root /etc/init.d/wsl-init.sh
 ```
 
 !> 第一行的作用是让该脚本获取管理员权限并执行自身，因为其中调用 PowerShell 的部分需要管理员权限。最后一行`wsl -u root /etc/init.d/wsl-init.sh`是额外的启动配置，后面会讲
+
+如果发现 WSL 内无法 ping 通网关地址`172.20.19.1`的话，在宿主机中以管理员权限打开 PowerShell 执行如下命令添加一条防火墙入站规则
+
+```sh
+New-NetFirewallRule -DisplayName "WSL" -Direction Inbound  -InterfaceAlias "vEthernet (WSL)"  -Action Allow
+```
 
 #### SSH 配置
 
@@ -335,9 +349,8 @@ sudo ln -s /www/wwwroot/test /mnt/d/Workspace/test
 1. 在 Ubuntu 中创建一个脚本`sudo vim /etc/init.d/wsl-init.sh`，内容如下
 
 ```sh
-#! /bin/sh
+#!/bin/sh
 
-service ssh start
 /etc/init.d/nginx start
 /etc/init.d/mysqld start
 bt start
