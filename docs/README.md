@@ -4,7 +4,7 @@
 - TypeScript
 - Node.js
 - Docker、Nginx、PM2
-- VsCode、git
+- VSCode、git
 - 前端框架：Vue、React
 - 工程化工具：Webpack
 - CSS 预处理工具：postcss、sass、less

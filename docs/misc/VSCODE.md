@@ -128,7 +128,9 @@
 - [Remote Explorer](https://marketplace.visualstudio.com/items?itemName=ms-vscode.remote-explorer) 远程资源管理器
   - [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) 在 VSCode 中使用 SSH 连接服务器
   - [Remote - SSH: Editing Configuration Files](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh-edit) 在 VSCode 中通过 SSH 连接远端服务器作为开发环境
+- [Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker) Docker 官方插件，提供在 VSCode 中管理镜像和容器的功能
 - [WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl) VSCode 的微软官方 WSL 插件
+- [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) 提供在 Docker 容器中进行开发的能力
 
 ## 我的 VSCode 用户配置
 
