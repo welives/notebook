@@ -84,7 +84,7 @@
 
 #### 将 apt 更换为[阿里源](https://developer.aliyun.com/mirror/ubuntu)
 
-切到`root`用户，使用顺手的编辑器修改文件`vim /etc/apt/sources.list`，将所有链接替换为`https://mirrors.aliyun.com/ubuntu/`
+切到`root`用户，使用顺手的编辑器修改文件`vim /etc/apt/sources.list`，将所有源链接替换为`https://mirrors.aliyun.com/ubuntu/`
 
 可以使用`vim`的替换命令进行批量修改，例如：`:%s#http://cn.archive.ubuntu.com#https://mirrors.aliyun.com#g`
 
@@ -158,6 +158,10 @@ wsl -u root /etc/init.d/wsl-init.sh
 New-NetFirewallRule -DisplayName "WSL" -Direction Inbound  -InterfaceAlias "vEthernet (WSL)"  -Action Allow
 ```
 
+并且启用这一条规则
+
+![](./assets/windows_firewall.png)
+
 #### SSH 配置
 
 在新安装的 Ubuntu 中把`openssh-server`给卸载了，因为它预装的可能不完整，需要重新安装一下，切到`root`用户
@@ -196,27 +200,20 @@ netsh advfirewall firewall add rule name=WSL2 dir=in action=allow protocol=TCP l
 
 #### WSL 设置代理
 
-1. 临时设置代理，这种方式设置的代理仅在当前终端生效，关闭当前终端后就会恢复之前的环境变量。这里，因为我的宿主机 Windows 用的是 Clash，宿主 IP 地址为`192.168.5.10`，端口为`7890`，所以在终端输入
+1. 先在宿主机中查看 vEthernet (WSL)的 ip 地址，我这里的是`172.20.19.1`，然后确保 WSL 子系统和宿主机之间能够双向 ping 通
+
+![](./assets/wsl_proxy_setup_1.png)
+
+2. 确定魔法工具所使用的代理端口，我这里的是`7890`，并启用局域网代理
+
+3. 设置代理的三种方式
+   - 临时设置，这种方式设置的代理仅在当前终端生效，关闭当前终端后就会恢复之前的环境变量。在终端输入
+   - 修改`.bashrc`文件，这种方式对当前用户永久生效。在终端输入`vim ~/.bashrc`，然后在文件末尾添加以下两行后保存退出，最后`source .bashrc`重载配置使其生效
+   - 修改`/etc/profile`文件，这种方式对所有用户永久生效。在终端输入`vim /etc/profile`，然后在文件末尾添加以下两行后保存退出，最后在终端输入`source /etc/profile`重载配置且重启 WSL 才能使配置生效
 
 ```sh
-export http_proxy="http://192.168.5.10:7890"
-export https_proxy="http://192.168.5.10:7890"
-```
-
-!> Clash 要记得打开`Allow LAN`模式，因为 Ubuntu 和宿主机之间其实是属于局域网
-
-2. 修改`.bashrc`文件，这种方式对当前用户永久生效。先在终端输入`cd ~`回到用户根目录，接着输入`vim .bashrc`，然后在文件末尾添加以下两行后保存退出，最后在终端输入`source .bashrc`重载配置使其生效
-
-```sh
-export http_proxy="http://192.168.5.10:7890"
-export https_proxy="http://192.168.5.10:7890"
-```
-
-1. 修改`/etc/profile`文件，这种方式对所有用户永久生效。在终端输入`vim /etc/profile`，接着在文件末尾添加以下两行后保存退出，最后在终端输入`source /etc/profile`重载配置且重启 WSL 才能使配置生效
-
-```sh
-export http_proxy="http://192.168.5.10:7890"
-export https_proxy="http://192.168.5.10:7890"
+export http_proxy="http://172.20.19.1:7890"
+export https_proxy="http://172.20.19.1:7890"
 ```
 
 #### 文件系统
