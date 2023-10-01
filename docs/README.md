@@ -1,4 +1,4 @@
-我个人认为「**现代前端开发**」所必须需要掌握的技术至少有
+我个人认为「**现代前端开发**」所必须掌握的技术至少有
 
 - 原始的三件套 HTML、CSS、JavaScript
 - TypeScript
@@ -6,8 +6,8 @@
 - Docker、Nginx、PM2
 - VSCode、git
 - 前端框架：Vue、React
-- 工程化工具：Webpack
-- CSS 预处理工具：postcss、sass、less
-- 代码规范工具：Eslint、Prettier、Stylelint
+- 工程化：Webpack
+- CSS 预处理：postcss、sass、less
+- 代码规范：Eslint、Prettier、Stylelint
 - 基础的 Linux 服务器使用
-- 魔法
+- 科学上网

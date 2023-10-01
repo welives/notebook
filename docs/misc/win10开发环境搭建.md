@@ -22,7 +22,7 @@
 - [Docker](https://www.docker.com/products/docker-desktop/)
 - Windows Terminal
 
-## 魔法
+## 科学上网
 
 这年头当个程序员不会点魔法都没法干活了，我自己用的是`Clash`，Chrome 浏览器插件配合使用的是`Proxy SwitchyOmega`
 
